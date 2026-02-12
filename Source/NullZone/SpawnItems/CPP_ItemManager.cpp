@@ -46,7 +46,11 @@ ACPP_EquipActor* ACPP_ItemManager::EquipItemToPlayer(const FItemRuntimeInfo& Ite
 	if (!PoolManager || !Player) return nullptr;
 
 	ACPP_EquipActor* Actor = PoolManager->GetEquipActor(ItemData);
-	if (!Actor) return nullptr;
+	if (!Actor)
+	{
+		UE_LOG(LogTemp, Error, TEXT("EQUIP ACTOR NOT FOUND"));
+		return nullptr;
+	}
 	//Actor->AttachToComponent(Player->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, "");
 	return Actor;
 }
@@ -55,7 +59,11 @@ ACPP_EquipActor* ACPP_ItemManager::EquipItemToNpc(const FName& ItemId, const ACh
 {
 	if (!PoolManager || !Npc) return nullptr;
 	ACPP_EquipActor* Actor = PoolManager->GetEquipActorForNpc(ItemId);
-	if (!Actor) return nullptr;
+	if (!Actor)
+	{
+		UE_LOG(LogTemp, Error, TEXT("EQUIP ACTOR NOT FOUND"));
+		return nullptr;
+	}
 	return Actor;
 }
 

@@ -21,21 +21,25 @@ void UCPP_InventoryComponent::BeginPlay()
 	Super::BeginPlay();
 }
 
-void UCPP_InventoryComponent::EquipItemToWeaponSlot(const FItemRuntimeInfo& Item, int32 SlotToEquip)
+void UCPP_InventoryComponent::EquipItemToSlot(const FItemRuntimeInfo& Item, int32 SlotToEquip)
 {
 	if (SlotToEquip == -1)
 	{
-		if (IsWeaponEquipped(Item.InstanceId)) return;
-		for (int32 i = 0; i < WeaponSlots.Num(); i++)
+		if (IsItemEquipped(Item.InstanceId))
 		{
-			if (WeaponSlots[i].ItemName == "Empty")
+			OnSlotChanged.Broadcast(FindEquippedItemIndex(Item.InstanceId)+1, Item);
+			return;
+		}
+		for (int32 i = 0; i < Slots.Num(); i++)
+		{
+			if (Slots[i].ItemName == "Empty")
 			{
-				WeaponSlots[i].ItemName = Item.StaticData.ItemName;
-				WeaponSlots[i].InstanceId = Item.InstanceId;
+				Slots[i].ItemName = Item.StaticData.ItemName;
+				Slots[i].InstanceId = Item.InstanceId;
 				OnSlotChanged.Broadcast(i + 1, Item);
 				if (CurrentSlot == i)
 				{
-					EquipWeaponSlot(i);
+					EquipSlot(i);
 				}
 				break;
 			}
@@ -43,65 +47,21 @@ void UCPP_InventoryComponent::EquipItemToWeaponSlot(const FItemRuntimeInfo& Item
 	}
 	else
 	{
-		WeaponSlots[SlotToEquip-1].ItemName = Item.StaticData.ItemName;
-		WeaponSlots[SlotToEquip-1].InstanceId = Item.InstanceId;
+		Slots[SlotToEquip-1].ItemName = Item.StaticData.ItemName;
+		Slots[SlotToEquip-1].InstanceId = Item.InstanceId;
 		OnSlotChanged.Broadcast(SlotToEquip, Item);
 	}
 }
 
-void UCPP_InventoryComponent::UnequipItemFromWeaponSlot(const FItemRuntimeInfo& Item)
+void UCPP_InventoryComponent::UnequipItemFromSlot(const FItemRuntimeInfo& Item)
 {
-	if (IsWeaponEquipped(Item.InstanceId))
+	if (IsItemEquipped(Item.InstanceId))
 	{
-		int32 SlotIndex = FindEquippedWeaponIndex(Item.InstanceId);
+		int32 SlotIndex = FindEquippedItemIndex(Item.InstanceId);
 		if (SlotIndex == -1) { return; }
-		WeaponSlots[SlotIndex].ItemName = "Empty";
-		WeaponSlots[SlotIndex].InstanceId = FGuid::NewGuid();
+		Slots[SlotIndex].ItemName = "Empty";
+		Slots[SlotIndex].InstanceId = FGuid::NewGuid();
 		OnSlotChanged.Broadcast(SlotIndex + 1, FItemRuntimeInfo());
-	}
-}
-
-void UCPP_InventoryComponent::EquipItemToMiscSlot(const FItemRuntimeInfo& Item, int32 SlotToEquip)
-{
-	if (SlotToEquip == -1)
-	{
-		if (IsMiscEquipped(Item.InstanceId))
-		{
-			OnMSlotChanged.Broadcast(FindEquippedMiscIndex(Item.InstanceId)+1, Item);
-			return;
-		}
-		for (int32 i = 0; i < MiscSlots.Num(); i++)
-		{
-			if (MiscSlots[i].ItemName == "Empty")
-			{
-				MiscSlots[i].ItemName = Item.StaticData.ItemName;
-				MiscSlots[i].InstanceId = Item.InstanceId;
-				OnMSlotChanged.Broadcast(i + 1, Item);
-				if (MCurrentSlot == i)
-				{
-					EquipMiscSlot(i);
-				}
-				break;
-			}
-		}
-	}
-	else
-	{
-		MiscSlots[SlotToEquip-1].ItemName = Item.StaticData.ItemName;
-		MiscSlots[SlotToEquip-1].InstanceId = Item.InstanceId;
-		OnMSlotChanged.Broadcast(SlotToEquip, Item);
-	}
-}
-
-void UCPP_InventoryComponent::UnequipItemFromMiscSlot(const FItemRuntimeInfo& Item)
-{
-	if (IsMiscEquipped(Item.InstanceId))
-	{
-		int32 SlotIndex = FindEquippedMiscIndex(Item.InstanceId);
-		if (SlotIndex == -1) { return; }
-		MiscSlots[SlotIndex].ItemName = "Empty";
-		MiscSlots[SlotIndex].InstanceId = FGuid::NewGuid();
-		OnMSlotChanged.Broadcast(SlotIndex + 1, FItemRuntimeInfo());
 	}
 }
 
@@ -135,11 +95,11 @@ int32 UCPP_InventoryComponent::AddItem(const ACPP_PickupActor* NewActor)
 			}
 			for (int32 i = 0; i < 4; i++)
 			{
-				if (WeaponSlots[i].ItemName != "Empty")
+				if (Slots[i].ItemName != "Empty")
 				{
 					for (FItemRuntimeInfo& Item : Items)
 					{
-						if (Item.InstanceId == WeaponSlots[i].InstanceId)
+						if (Item.InstanceId == Slots[i].InstanceId)
 						{
 							OnSlotChanged.Broadcast(i+1, Item);
 						}
@@ -174,8 +134,7 @@ int32 UCPP_InventoryComponent::AddItem(const ACPP_PickupActor* NewActor)
 				}
 				Item.ItemQuantity += NewItem.ItemQuantity;
 				Weight += NewItemWeight;
-				if (Item.StaticData.ItemType == EItemType::Weapon) { EquipItemToWeaponSlot(Item, -1); }
-				if (Item.StaticData.ItemType == EItemType::Meds || Item.StaticData.ItemType == EItemType::Armor || Item.StaticData.ItemType == EItemType::Utility) { EquipItemToMiscSlot(Item, -1); }
+				EquipItemToSlot(Item, -1);
 				OnItemAdded.Broadcast(Item);
 				ItemManager->SpawnItemInWorld(NewActor, NewItem, EItemState::Inventory, ItemManager->GetDefaultPoolPlace());
 				Item.ItemState = EItemState::Inventory;
@@ -193,8 +152,7 @@ int32 UCPP_InventoryComponent::AddItem(const ACPP_PickupActor* NewActor)
 		}
 		Items.Add(NewItem);
 		Weight += NewItemWeight;
-		if (NewItem.StaticData.ItemType == EItemType::Weapon) { EquipItemToWeaponSlot(NewItem, -1); }
-		if (NewItem.StaticData.ItemType == EItemType::Meds || NewItem.StaticData.ItemType == EItemType::Armor || NewItem.StaticData.ItemType == EItemType::Utility) { EquipItemToMiscSlot(NewItem, -1); }
+		EquipItemToSlot(NewItem, -1);
 		OnItemAdded.Broadcast(NewItem);
 		ItemManager->SpawnItemInWorld(NewActor, NewItem, EItemState::Inventory, ItemManager->GetDefaultPoolPlace());
 		NewItem.ItemState = EItemState::Inventory;
@@ -216,9 +174,9 @@ bool UCPP_InventoryComponent::RemoveItem(const FName& ItemId, int32 Quantity)
 			ItemManager->SpawnItemInWorld(nullptr, TempInfo, EItemState::Level, GetSpawnTransform());
 			Items[i].ItemQuantity -= Quantity;
 			OnItemRemoved.Broadcast(ItemId, Quantity);
-			if (IsMiscEquipped(Items[i].InstanceId))
+			if (IsItemEquipped(Items[i].InstanceId))
 			{
-				OnMSlotChanged.Broadcast(FindEquippedMiscIndex(Items[i].InstanceId)+1, Items[i]);
+				OnSlotChanged.Broadcast(FindEquippedItemIndex(Items[i].InstanceId)+1, Items[i]);
 			}
 			if (EquippedItem && EquippedItem->GetRuntimeInfo().InstanceId == Items[i].InstanceId)
 			{
@@ -226,8 +184,7 @@ bool UCPP_InventoryComponent::RemoveItem(const FName& ItemId, int32 Quantity)
 			}
 			if (Items[i].ItemQuantity == 0)
 			{
-				UnequipItemFromWeaponSlot(Items[i]);
-				UnequipItemFromMiscSlot(Items[i]);
+				UnequipItemFromSlot(Items[i]);
 				if (EquippedItem && EquippedItem->GetRuntimeInfo().InstanceId == Items[i].InstanceId)
 				{
 					UE_LOG(LogTemp, Warning, TEXT("item null"))
@@ -332,22 +289,14 @@ void UCPP_InventoryComponent::InitializeInventory(UDataTable* TempItemDataTable)
 	AmmoIds.Add(EAmmoType::LongRangeAmmo, FName("LongRangeAmmo"));
 	AmmoIds.Add(EAmmoType::ShotgunShell, FName("ShotgunShell"));
 	AmmoIds.Add(EAmmoType::HighCaliberSurplus, FName("HighCaliberSurplus"));
-	for (int i = 0; i < 4; i++)
-	{
-		FSlotData Slot;
-		Slot.ItemName = "Empty";
-		Slot.InstanceId = FGuid::NewGuid();
-		WeaponSlots.Add(Slot);
-		OnSlotChanged.Broadcast(i + 1, FItemRuntimeInfo());
-	}
 
 	for (int i = 0; i < 6; i++)
 	{
 		FSlotData Slot;
 		Slot.ItemName = "Empty";
 		Slot.InstanceId = FGuid::NewGuid();
-		MiscSlots.Add(Slot);
-		OnMSlotChanged.Broadcast(i+1, FItemRuntimeInfo());
+		Slots.Add(Slot);
+		OnSlotChanged.Broadcast(i + 1, FItemRuntimeInfo());
 	}
 
 	OnItemEquipped.Broadcast(FItemRuntimeInfo());
@@ -358,14 +307,13 @@ void UCPP_InventoryComponent::InitializeInventory(UDataTable* TempItemDataTable)
 	}
 }
 
-void UCPP_InventoryComponent::EquipWeaponSlot(int32 Slot)
+void UCPP_InventoryComponent::EquipSlot(int32 Slot)
 {
-	if (Slot > WeaponSlots.Num() || Slot == -1) return;
+	if (Slot > Slots.Num() || Slot == -1) return;
 	if (EquippedItem)
 	{
 		EquippedItem->ChangedItem();
 	}
-	MCurrentSlot = -1;
 	CurrentSlot = Slot;
 	if (Slot < 0)
 	{
@@ -373,53 +321,19 @@ void UCPP_InventoryComponent::EquipWeaponSlot(int32 Slot)
 		OnItemEquipped.Broadcast(FItemRuntimeInfo());
 		return;
 	}
-	else if (WeaponSlots[Slot].ItemName != "Empty")
+	else if (Slots[Slot].ItemName != "Empty")
 	{
 		for (FItemRuntimeInfo Data : Items)
 		{
-			if (Data.InstanceId == WeaponSlots[Slot].InstanceId)
+			if (Data.InstanceId == Slots[Slot].InstanceId)
 			{
 				EquippedItem = ItemManager->EquipItemToPlayer(Data, Character);
+				if (!IsValid(EquippedItem)) return;
 				OnItemEquipped.Broadcast(EquippedItem->GetRuntimeInfo());
 				break;
 			}
 		}
 		
-	}
-	else
-	{
-		EquippedItem = nullptr;
-		OnItemEquipped.Broadcast(FItemRuntimeInfo());
-	}
-}
-
-void UCPP_InventoryComponent::EquipMiscSlot(int32 Slot)
-{
-	if (Slot > MiscSlots.Num() || Slot == -1) return;
-	if (EquippedItem)
-	{
-		EquippedItem->ChangedItem();
-	}
-	MCurrentSlot = Slot;
-	CurrentSlot = Slot;
-	if (Slot < 0)
-	{
-		EquippedItem = nullptr;
-		OnItemEquipped.Broadcast(FItemRuntimeInfo());
-		return;
-	}
-	else if (MiscSlots[Slot].ItemName != "Empty")
-	{
-		for (FItemRuntimeInfo Data : Items)
-		{
-			if (Data.InstanceId == MiscSlots[Slot].InstanceId)
-			{
-				EquippedItem = ItemManager->EquipItemToPlayer(Data, Character);
-				OnItemEquipped.Broadcast(EquippedItem->GetRuntimeInfo());
-				break;
-			}
-		}
-
 	}
 	else
 	{
@@ -436,9 +350,9 @@ void UCPP_InventoryComponent::UseItem(const FName& ItemId)
 		{
 			Items[i].ItemQuantity -= 1;
 			OnItemRemoved.Broadcast(ItemId, 1);
-			if (IsMiscEquipped(Items[i].InstanceId))
+			if (IsItemEquipped(Items[i].InstanceId))
 			{
-				OnMSlotChanged.Broadcast(FindEquippedMiscIndex(Items[i].InstanceId) + 1, Items[i]);
+				OnSlotChanged.Broadcast(FindEquippedItemIndex(Items[i].InstanceId) + 1, Items[i]);
 			}
 			if (EquippedItem && EquippedItem->GetRuntimeInfo().InstanceId == Items[i].InstanceId)
 			{
@@ -446,7 +360,7 @@ void UCPP_InventoryComponent::UseItem(const FName& ItemId)
 			}
 			if (Items[i].ItemQuantity == 0)
 			{
-				UnequipItemFromMiscSlot(Items[i]);
+				UnequipItemFromSlot(Items[i]);
 				if (EquippedItem && EquippedItem->GetRuntimeInfo().InstanceId == Items[i].InstanceId)
 				{
 					EquippedItem = nullptr;
@@ -480,11 +394,11 @@ void UCPP_InventoryComponent::FireWeapon()
 		}
 		for (int32 i = 0; i < 4; i++)
 		{
-			if (WeaponSlots[i].ItemName != "Empty")
+			if (Slots[i].ItemName != "Empty")
 			{
 				for (FItemRuntimeInfo& Item : Items)
 				{
-					if (Item.InstanceId == WeaponSlots[i].InstanceId)
+					if (Item.InstanceId == Slots[i].InstanceId)
 					{
 						OnSlotChanged.Broadcast(i + 1, Item);
 					}

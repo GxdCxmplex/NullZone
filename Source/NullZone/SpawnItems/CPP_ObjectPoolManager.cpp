@@ -13,12 +13,12 @@ UCPP_ObjectPoolManager::UCPP_ObjectPoolManager()
 
 void UCPP_ObjectPoolManager::InitializePools(UDataTable* TempItemDataTable, TSubclassOf<ACPP_EquipActor> EquipClass, TSubclassOf<ACPP_PickupActor> PickupClass)
 {
+	
 	ItemDataTable = TempItemDataTable;
 	EquipActor = EquipClass;
 	PickupActor = PickupClass;
 	if (!ItemDataTable || !EquipActor || !PickupActor) return;
 	TArray<FName> RowNames = ItemDataTable->GetRowNames();
-
 	for (const FName& ItemID : RowNames)
 	{
 		FItemData* ItemData = ItemDataTable->FindRow<FItemData>(ItemID, "");
@@ -62,8 +62,10 @@ void UCPP_ObjectPoolManager::InitializePools(UDataTable* TempItemDataTable, TSub
 
 ACPP_EquipActor* UCPP_ObjectPoolManager::GetEquipActor(const FItemRuntimeInfo& ItemInfo)
 {
-	if (!AllEquipActors.Contains(ItemInfo.StaticData.ItemId)) return nullptr;
-
+	if (!AllEquipActors.Contains(ItemInfo.StaticData.ItemId)) {
+		UE_LOG(LogTemp, Error, TEXT("EQUIP ACTOR NOT FOUND"));
+		return nullptr;
+	}
 	for (ACPP_EquipActor* Actor : AllEquipActors[ItemInfo.StaticData.ItemId])
 	{
 		if (Actor->IsHidden() && !Actor->IsActorBeingDestroyed() && Actor != CurrentEquipActor)

@@ -38,8 +38,8 @@ public:
 	void ResetToPoolState();
 	void FinishUse();
 
-	FORCEINLINE FItemRuntimeInfo GetRuntimeInfo() const { return RuntimeData; }
-	FORCEINLINE FItemData GetGeneralData() const { return GeneralData; }
+	FORCEINLINE FItemRuntimeInfo GetRuntimeInfo() { return RuntimeData; }
+	FORCEINLINE FItemData GetGeneralData()  { return GeneralData; }
 
 protected:
 	// Called when the game starts or when spawned

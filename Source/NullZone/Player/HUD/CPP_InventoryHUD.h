@@ -31,18 +31,10 @@ class NULLZONE_API UCPP_InventoryHUD : public UUserWidget
 public:
 
 	void LookEvent(float MouseX, float MouseY);
-	void MLookEvent(float MouseX, float MouseY);
 
 	void ResetSlot(int32 CurrentSlotTemp);
-	void ResetMSlot(int32 CurrentSlotTemp);
 
 	void VisibilityHandler(bool bVisibility);
-	void MVisibilityHandler(bool bVisibility);
-
-	void Slot1Select(bool Selected);
-	void Slot2Select(bool Selected);
-	void Slot3Select(bool Selected);
-	void Slot4Select(bool Selected);
 
 	void MSlot1Select(bool Selected);
 	void MSlot2Select(bool Selected);
@@ -58,15 +50,6 @@ public:
 	void OnDrop1ButtonClicked();
 	UFUNCTION()
 	void OnDropAllButtonClicked();
-
-	UFUNCTION()
-	void Slot1WeaponEquipFunc();
-	UFUNCTION()
-	void Slot2WeaponEquipFunc();
-	UFUNCTION()
-	void Slot3WeaponEquipFunc();
-	UFUNCTION()
-	void Slot4WeaponEquipFunc();
 
 	UFUNCTION()
 	void Slot1MiscEquipFunc();
@@ -101,8 +84,6 @@ public:
 	UFUNCTION()
 	void ChangeSlot(int32 SlotNum, const FItemRuntimeInfo& ItemData);
 	UFUNCTION()
-	void ChangeMSlot(int32 SlotNum, const FItemRuntimeInfo& ItemData);
-	UFUNCTION()
 	void ChangeAmmo(const EAmmoType& AmmoType, const int32& Quantity);
 
 	UFUNCTION()
@@ -125,43 +106,13 @@ public:
 	UFUNCTION()
 	void DelayOnSelected();
 
-	UFUNCTION()
-	void MDelayOnSelected();
-
 	int32 GetCurrentSlot();
-	int32 GetCurrentMSlot();
 
 protected:
 	
 	virtual void NativeConstruct() override;
 	
 protected:
-
-	//weapon wheel
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UImage* Slot1;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* Slot1Text;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* Slot1Ammo;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UImage* Slot2;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* Slot2Text;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* Slot2Ammo;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UImage* Slot3;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* Slot3Text;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* Slot3Ammo;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UImage* Slot4;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* Slot4Text;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* Slot4Ammo;
 
 	//misc wheel
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
@@ -202,23 +153,11 @@ protected:
 	UTextBlock* MSlot6Ammo;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UCanvasPanel* WeaponSelector;
-
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UCanvasPanel* MiscWheel;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UCanvasPanel* InventoryCanvas;
 
-	//weapon Wheel animations
-	UPROPERTY(meta = (BindWidgetAnim), Transient)
-	UWidgetAnimation* Slot1Selected;
-	UPROPERTY(meta = (BindWidgetAnim), Transient)
-	UWidgetAnimation* Slot2Selected;
-	UPROPERTY(meta = (BindWidgetAnim), Transient)
-	UWidgetAnimation* Slot3Selected;
-	UPROPERTY(meta = (BindWidgetAnim), Transient)
-	UWidgetAnimation* Slot4Selected;
 
 	//misc wheel animations
 	UPROPERTY(meta = (BindWidgetAnim), Transient)
@@ -247,16 +186,6 @@ protected:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UButton* DropAllButton;
 
-	//weapon equip
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UButton* Slot1WeaponEquip;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UButton* Slot2WeaponEquip;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UButton* Slot3WeaponEquip;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UButton* Slot4WeaponEquip;
-
 	//misc equip
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UButton* Slot1MiscEquip;
@@ -271,65 +200,49 @@ protected:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UButton* Slot6MiscEquip;
 
-	//Weapon slots
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* WSlot1Text;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* WSlot1Ammo;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* WSlot1TotalAmmo;
-	//
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* WSlot2Text;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* WSlot2Ammo;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* WSlot2TotalAmmo;
-	//
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* WSlot3Text;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* WSlot3Ammo;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* WSlot3TotalAmmo;
-	//
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* WSlot4Text;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* WSlot4Ammo;
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UTextBlock* WSlot4TotalAmmo;
 
 	//Misc slot frame
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* ISlot1Text;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* ISlot1Quantity;
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UTextBlock* WSlot1TotalAmmo;
 	//
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* ISlot2Text;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* ISlot2Quantity;
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UTextBlock* WSlot2TotalAmmo;
 	//
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* ISlot3Text;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* ISlot3Quantity;
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UTextBlock* WSlot3TotalAmmo;
 	//
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* ISlot4Text;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* ISlot4Quantity;
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UTextBlock* WSlot4TotalAmmo;
 	//
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* ISlot5Text;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* ISlot5Quantity;
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UTextBlock* WSlot5TotalAmmo;
 	//
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* ISlot6Text;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UTextBlock* ISlot6Quantity;
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UTextBlock* WSlot6TotalAmmo;
 
 	// Ammo Frame
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
@@ -388,20 +301,13 @@ protected:
 	UCanvasPanelSlot* ContextMenuCanvasSlot;
 
 	bool bIsSlotSelected = false;
-	bool bIsMSlotSelected = false;
 	bool bIsContextMenuVisible = false;
 	
 	int32 CurrentSlot = -1;
 	int32 LastSlot = -1;
 	bool bSlotChosen = false;
 
-	int32 MCurrentSlot = -1;
-	int32 MLastSlot = -1;
-	bool bMSlotChosen = false;
-
 	FTimerHandle SelectedDelay;
-
-	FTimerHandle MSelectedDelay;
 
 	UPROPERTY()
 	UCPP_InventorySlot* CurrentClickedSlot = nullptr;

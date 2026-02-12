@@ -55,9 +55,6 @@ protected:
 	UInputAction* PickupInput;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
-	UInputAction* MiscWheelInput;
-
-	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* M1Input;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
@@ -121,8 +118,6 @@ protected:
 	void WeaponWheelEndFunc(const FInputActionValue& value);
 	void InventoryFunc(const FInputActionValue& value);
 	void OnPickupPressed(const FInputActionValue& value);
-	void MiscWheelStartFunc(const FInputActionValue& value);
-	void MiscWheelEndFunc(const FInputActionValue& value);
 	void M1Down();
 	void M1Up();
 	void RKeyDown();
@@ -149,6 +144,7 @@ public:
 	FORCEINLINE float GetHealthMax() const { return HealthMax; }
 
 	void SetStamina(float Current, float Max);
+	UFUNCTION(BlueprintCallable)
 	void SetHealth(float Current, float Max);
 
 	void CanRegenStaminaFunc();
@@ -183,8 +179,6 @@ private:
 	bool bInvVisibility = false;
 	UPROPERTY(EditAnywhere, Category = "UI")
 	bool bWeaponWheel = false;
-	UPROPERTY(EditAnywhere, Category = "UI")
-	bool bMiscWheel = false;
 
 	UPROPERTY(EditAnywhere, Category = "UI")
 	bool bM1Down = false;

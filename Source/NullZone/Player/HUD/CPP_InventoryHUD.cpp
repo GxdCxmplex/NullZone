@@ -14,112 +14,52 @@
 #include "NullZone/Player/CPP_InventoryComponent.h"
 
 
+
 void UCPP_InventoryHUD::LookEvent(float MouseX, float MouseY)
 {
 	if ((FMath::Abs(MouseX) >= .2f || FMath::Abs(MouseY) >= .2f) && !bIsSlotSelected)
 	{
-		int32 NewSlot = FMath::RoundToInt32(((FMath::RadiansToDegrees(FMath::Atan2(MouseY, MouseX)) + 180.f) * -1.f) / 90.f) * -1;
-		if (NewSlot == 0) return;
+		int32 NewSlot = FMath::FloorToInt32(((FMath::RadiansToDegrees(FMath::Atan2(MouseY, MouseX)) + 180.f) * -1.f) / 60.f) * -1 - 1;
+		if (NewSlot == 0) NewSlot = 6;
 		if (CurrentSlot == NewSlot) return;
 		if (LastSlot != -1 && CurrentSlot == -1) CurrentSlot = LastSlot;
 		switch (NewSlot)
 		{
 		case 1:
-			Slot1Select(true);
+			MSlot1Select(true);
 			ResetSlot(CurrentSlot);
 			break;
 		case 2:
-			Slot2Select(true);
+			MSlot2Select(true);
 			ResetSlot(CurrentSlot);
 			break;
 		case 3:
-			Slot3Select(true);
+			MSlot3Select(true);
 			ResetSlot(CurrentSlot);
 			break;
 		case 4:
-			Slot4Select(true);
+			MSlot4Select(true);
+			ResetSlot(CurrentSlot);
+			break;
+		case 5:
+			MSlot5Select(true);
+			ResetSlot(CurrentSlot);
+			break;
+		case 6:
+			MSlot6Select(true);
 			ResetSlot(CurrentSlot);
 			break;
 		default:
 			break;
 		}
 		CurrentSlot = NewSlot;
-		ResetMSlot(MLastSlot);
-		MLastSlot = -1;
+//		ResetSlot(LastSlot);
+		LastSlot = -1;
 		bSlotChosen = true;
 	}
 }
 
-void UCPP_InventoryHUD::MLookEvent(float MouseX, float MouseY)
-{
-	if ((FMath::Abs(MouseX) >= .2f || FMath::Abs(MouseY) >= .2f) && !bIsMSlotSelected)
-	{
-		int32 NewSlot = FMath::FloorToInt32(((FMath::RadiansToDegrees(FMath::Atan2(MouseY, MouseX)) + 180.f) * -1.f) / 60.f) * -1 - 1;
-		if (NewSlot == 0) NewSlot = 6;
-		if (MCurrentSlot == NewSlot) return;
-		if (MLastSlot != -1 && MCurrentSlot == -1) MCurrentSlot = MLastSlot;
-		switch (NewSlot)
-		{
-		case 1:
-			MSlot1Select(true);
-			ResetMSlot(MCurrentSlot);
-			break;
-		case 2:
-			MSlot2Select(true);
-			ResetMSlot(MCurrentSlot);
-			break;
-		case 3:
-			MSlot3Select(true);
-			ResetMSlot(MCurrentSlot);
-			break;
-		case 4:
-			MSlot4Select(true);
-			ResetMSlot(MCurrentSlot);
-			break;
-		case 5:
-			MSlot5Select(true);
-			ResetMSlot(MCurrentSlot);
-			break;
-		case 6:
-			MSlot6Select(true);
-			ResetMSlot(MCurrentSlot);
-			break;
-		default:
-			break;
-		}
-		MCurrentSlot = NewSlot;
-		ResetSlot(LastSlot);
-		LastSlot = -1;
-		bMSlotChosen = true;
-	}
-}
-
 void UCPP_InventoryHUD::ResetSlot(int32 CurrentSlotTemp)
-{
-	if (CurrentSlotTemp == -1) return;
-	switch (CurrentSlotTemp)
-	{
-	case 1:
-		Slot1Select(false);
-		break;
-	case 2:
-		Slot2Select(false);
-		break;
-	case 3:
-		Slot3Select(false);
-		break;
-	case 4:
-		Slot4Select(false);
-		break;
-	default:
-		break;
-	}
-	bIsSlotSelected = true;
-	GetWorld()->GetTimerManager().ClearTimer(SelectedDelay);
-	GetWorld()->GetTimerManager().SetTimer(SelectedDelay, this, &UCPP_InventoryHUD::DelayOnSelected, .2f, false);
-}
-
-void UCPP_InventoryHUD::ResetMSlot(int32 CurrentSlotTemp)
 {
 	if (CurrentSlotTemp == -1) return;
 	switch (CurrentSlotTemp)
@@ -145,82 +85,20 @@ void UCPP_InventoryHUD::ResetMSlot(int32 CurrentSlotTemp)
 	default:
 		break;
 	}
-	bIsMSlotSelected = true;
-	GetWorld()->GetTimerManager().ClearTimer(MSelectedDelay);
-	GetWorld()->GetTimerManager().SetTimer(MSelectedDelay, this, &UCPP_InventoryHUD::MDelayOnSelected, .2f, false);
+	bIsSlotSelected = true;
+	GetWorld()->GetTimerManager().ClearTimer(SelectedDelay);
+	GetWorld()->GetTimerManager().SetTimer(SelectedDelay, this, &UCPP_InventoryHUD::DelayOnSelected, .2f, false);
 }
-
 
 void UCPP_InventoryHUD::VisibilityHandler(bool bVisibility)
-{
-	if (!WeaponSelector) return;
-	if (bVisibility)
-	{
-		CurrentSlot = -1;
-		MiscWheel->SetVisibility(ESlateVisibility::Hidden);
-		InventoryCanvas->SetVisibility(ESlateVisibility::Hidden);
-	}
-	WeaponSelector->SetVisibility(bVisibility ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
-}
-
-void UCPP_InventoryHUD::MVisibilityHandler(bool bVisibility)
 {
 	if (!MiscWheel) return;
 	if (bVisibility) 
 	{
-		MCurrentSlot = -1;
-		WeaponSelector->SetVisibility(ESlateVisibility::Hidden);
+		CurrentSlot = -1;
 		InventoryCanvas->SetVisibility(ESlateVisibility::Hidden);
 	} 
 	MiscWheel->SetVisibility(bVisibility ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
-}
-
-void UCPP_InventoryHUD::Slot1Select(bool Selected)
-{
-	if (Selected)
-	{
-		PlayAnimation(Slot1Selected, 0.f, 1, EUMGSequencePlayMode::Forward, 1.f, false);
-	}
-	else
-	{
-		PlayAnimation(Slot1Selected, 0.f, 1, EUMGSequencePlayMode::Reverse, 1.f, false);
-	}
-}
-
-void UCPP_InventoryHUD::Slot2Select(bool Selected)
-{
-	if (Selected)
-	{
-		PlayAnimation(Slot2Selected, 0.f, 1, EUMGSequencePlayMode::Forward, 1.f, false);
-	}
-	else
-	{
-		PlayAnimation(Slot2Selected, 0.f, 1, EUMGSequencePlayMode::Reverse, 1.f, false);
-	}
-}
-
-void UCPP_InventoryHUD::Slot3Select(bool Selected)
-{
-	if (Selected)
-	{
-		PlayAnimation(Slot3Selected, 0.f, 1, EUMGSequencePlayMode::Forward, 1.f, false);
-	}
-	else
-	{
-		PlayAnimation(Slot3Selected, 0.f, 1, EUMGSequencePlayMode::Reverse, 1.f, false);
-	}
-}
-
-void UCPP_InventoryHUD::Slot4Select(bool Selected)
-{
-	if (Selected)
-	{
-		PlayAnimation(Slot4Selected, 0.f, 1, EUMGSequencePlayMode::Forward, 1.f, false);
-	}
-	else
-	{
-		PlayAnimation(Slot4Selected, 0.f, 1, EUMGSequencePlayMode::Reverse, 1.f, false);
-	}
 }
 
 void UCPP_InventoryHUD::MSlot1Select(bool Selected)
@@ -312,23 +190,6 @@ int32 UCPP_InventoryHUD::GetCurrentSlot()
 	return CurrentSlot;
 }
 
-int32 UCPP_InventoryHUD::GetCurrentMSlot()
-{
-	if (!bMSlotChosen) return 0;
-	if (MCurrentSlot == MLastSlot && MCurrentSlot != -1)
-	{
-		ResetSlot(MLastSlot);
-		MCurrentSlot = -1;
-		MLastSlot = MCurrentSlot;
-	}
-	else if (MCurrentSlot != -1)
-	{
-		MLastSlot = MCurrentSlot;
-	}
-	bMSlotChosen = false;
-	return MCurrentSlot;
-}
-
 void UCPP_InventoryHUD::OnEquipButtonClicked()
 {
 	if (!CurrentClickedSlot) { UE_LOG(LogTemp, Warning, TEXT("no clicked slot exist")); return; }
@@ -347,14 +208,7 @@ void UCPP_InventoryHUD::OnEquipButtonClicked()
 	{
 		const FItemRuntimeInfo* TempItemData = InventoryComponent->GetItemData(CurrentClickedSlot->GetItemId());
 		if (TempItemData == nullptr) { return; }
-		if (CurrentClickedSlot->GetItemType() == EItemType::Weapon)
-		{
-			InventoryComponent->UnequipItemFromWeaponSlot(*TempItemData);
-		}
-		else
-		{
-			InventoryComponent->UnequipItemFromMiscSlot(*TempItemData);
-		}
+		InventoryComponent->UnequipItemFromSlot(*TempItemData);
 		EquipText->SetText(FText::FromString("Equip"));
 		CloseContextMenu();
 	}
@@ -379,78 +233,46 @@ void UCPP_InventoryHUD::OnDropAllButtonClicked()
 	}
 }
 
-void UCPP_InventoryHUD::Slot1WeaponEquipFunc()
-{
-	const FItemRuntimeInfo* TempItemData = InventoryComponent->GetItemData(CurrentClickedSlot->GetItemId());
-	if (TempItemData == nullptr) { return; }
-	InventoryComponent->EquipItemToWeaponSlot(*TempItemData, 1);
-	CloseContextMenu();
-}
-
-void UCPP_InventoryHUD::Slot2WeaponEquipFunc()
-{
-	const FItemRuntimeInfo* TempItemData = InventoryComponent->GetItemData(CurrentClickedSlot->GetItemId());
-	if (TempItemData == nullptr) { return; }
-	InventoryComponent->EquipItemToWeaponSlot(*TempItemData, 2);
-	CloseContextMenu();
-}
-
-void UCPP_InventoryHUD::Slot3WeaponEquipFunc()
-{
-	const FItemRuntimeInfo* TempItemData = InventoryComponent->GetItemData(CurrentClickedSlot->GetItemId());
-	if (TempItemData == nullptr) { return; }
-	InventoryComponent->EquipItemToWeaponSlot(*TempItemData, 3);
-	CloseContextMenu();
-}
-
-void UCPP_InventoryHUD::Slot4WeaponEquipFunc()
-{
-	const FItemRuntimeInfo* TempItemData = InventoryComponent->GetItemData(CurrentClickedSlot->GetItemId());
-	if (TempItemData == nullptr) { return; }
-	InventoryComponent->EquipItemToWeaponSlot(*TempItemData, 4);
-	CloseContextMenu();
-}
-
 void UCPP_InventoryHUD::Slot1MiscEquipFunc()
 {
 	const FItemRuntimeInfo* TempItemData = InventoryComponent->GetItemData(CurrentClickedSlot->GetItemId());
 	if (TempItemData == nullptr) { return; }
-	InventoryComponent->EquipItemToMiscSlot(*TempItemData, 1);
+	InventoryComponent->EquipItemToSlot(*TempItemData, 1);
 	CloseContextMenu();
 }
 void UCPP_InventoryHUD::Slot2MiscEquipFunc()
 {
 	const FItemRuntimeInfo* TempItemData = InventoryComponent->GetItemData(CurrentClickedSlot->GetItemId());
 	if (TempItemData == nullptr) { return; }
-	InventoryComponent->EquipItemToMiscSlot(*TempItemData, 2);
+	InventoryComponent->EquipItemToSlot(*TempItemData, 2);
 	CloseContextMenu();
 }
 void UCPP_InventoryHUD::Slot3MiscEquipFunc()
 {
 	const FItemRuntimeInfo* TempItemData = InventoryComponent->GetItemData(CurrentClickedSlot->GetItemId());
 	if (TempItemData == nullptr) { return; }
-	InventoryComponent->EquipItemToMiscSlot(*TempItemData, 3);
+	InventoryComponent->EquipItemToSlot(*TempItemData, 3);
 	CloseContextMenu();
 }
 void UCPP_InventoryHUD::Slot4MiscEquipFunc()
 {
 	const FItemRuntimeInfo* TempItemData = InventoryComponent->GetItemData(CurrentClickedSlot->GetItemId());
 	if (TempItemData == nullptr) { return; }
-	InventoryComponent->EquipItemToMiscSlot(*TempItemData, 4);
+	InventoryComponent->EquipItemToSlot(*TempItemData, 4);
 	CloseContextMenu();
 }
 void UCPP_InventoryHUD::Slot5MiscEquipFunc()
 {
 	const FItemRuntimeInfo* TempItemData = InventoryComponent->GetItemData(CurrentClickedSlot->GetItemId());
 	if (TempItemData == nullptr) { return; }
-	InventoryComponent->EquipItemToMiscSlot(*TempItemData, 5);
+	InventoryComponent->EquipItemToSlot(*TempItemData, 5);
 	CloseContextMenu();
 }
 void UCPP_InventoryHUD::Slot6MiscEquipFunc()
 {
 	const FItemRuntimeInfo* TempItemData = InventoryComponent->GetItemData(CurrentClickedSlot->GetItemId());
 	if (TempItemData == nullptr) { return; }
-	InventoryComponent->EquipItemToMiscSlot(*TempItemData, 6);
+	InventoryComponent->EquipItemToSlot(*TempItemData, 6);
 	CloseContextMenu();
 }
 
@@ -507,125 +329,154 @@ void UCPP_InventoryHUD::ChangeSlot(int32 SlotNum, const FItemRuntimeInfo& ItemDa
 	switch (SlotNum)
 	{
 	case 1:
-		Slot1Text->SetText(FText::FromString(ItemData.StaticData.ItemName));
-		WSlot1Text->SetText(FText::FromString(ItemData.StaticData.ItemName));
-		if (ItemData.StaticData.ItemName.Equals("Empty"))
-		{
-			WSlot1Ammo->SetText(FText::FromString(""));
-			WSlot1TotalAmmo->SetText(FText::FromString(""));
-			Slot1Ammo->SetText(FText::FromString(""));
-		}
-		else
-		{
-			if (ItemData.StaticData.ItemType == EItemType::Weapon)
-			{
-				WSlot1Ammo->SetText(FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(ItemData.WeaponData.Ammos), FText::AsNumber(ItemData.WeaponData.MagSize)));
-				WSlot1TotalAmmo->SetText(FText::Format(FText::FromString(TEXT("{0}")), FText::AsNumber(InventoryComponent->GetAmmoAmount(ItemData.WeaponData.AmmoType))));
-				Slot1Ammo->SetText(FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(ItemData.WeaponData.Ammos), FText::AsNumber(InventoryComponent->GetAmmoAmount(ItemData.WeaponData.AmmoType))));
-			}
-		}
-		break;
-	case 2:
-		Slot2Text->SetText(FText::FromString(ItemData.StaticData.ItemName));
-		WSlot2Text->SetText(FText::FromString(ItemData.StaticData.ItemName));
-		if (ItemData.StaticData.ItemName.Equals("Empty"))
-		{
-			WSlot2Ammo->SetText(FText::FromString(""));
-			WSlot2TotalAmmo->SetText(FText::FromString(""));
-			Slot2Ammo->SetText(FText::FromString(""));
-		}
-		else
-		{
-			if (ItemData.StaticData.ItemType == EItemType::Weapon)
-			{
-				WSlot2Ammo->SetText(FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(ItemData.WeaponData.Ammos), FText::AsNumber(ItemData.WeaponData.MagSize)));
-				WSlot2TotalAmmo->SetText(FText::Format(FText::FromString(TEXT("{0}")), FText::AsNumber(InventoryComponent->GetAmmoAmount(ItemData.WeaponData.AmmoType))));
-				Slot2Ammo->SetText(FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(ItemData.WeaponData.Ammos), FText::AsNumber(InventoryComponent->GetAmmoAmount(ItemData.WeaponData.AmmoType))));
-			}
-		}
-		break;
-	case 3:
-		Slot3Text->SetText(FText::FromString(ItemData.StaticData.ItemName));
-		WSlot3Text->SetText(FText::FromString(ItemData.StaticData.ItemName));
-		if (ItemData.StaticData.ItemName.Equals("Empty"))
-		{
-			WSlot3Ammo->SetText(FText::FromString(""));
-			WSlot3TotalAmmo->SetText(FText::FromString(""));
-			Slot3Ammo->SetText(FText::FromString(""));
-		}
-		else
-		{
-			if (ItemData.StaticData.ItemType == EItemType::Weapon)
-			{
-				WSlot3Ammo->SetText(FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(ItemData.WeaponData.Ammos), FText::AsNumber(ItemData.WeaponData.MagSize)));
-				WSlot3TotalAmmo->SetText(FText::Format(FText::FromString(TEXT("{0}")), FText::AsNumber(InventoryComponent->GetAmmoAmount(ItemData.WeaponData.AmmoType))));
-				Slot3Ammo->SetText(FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(ItemData.WeaponData.Ammos), FText::AsNumber(InventoryComponent->GetAmmoAmount(ItemData.WeaponData.AmmoType))));
-			}
-		}
-		break;
-	case 4:
-		Slot4Text->SetText(FText::FromString(ItemData.StaticData.ItemName));
-		WSlot4Text->SetText(FText::FromString(ItemData.StaticData.ItemName));
-		if (ItemData.StaticData.ItemName.Equals("Empty"))
-		{
-			WSlot4Ammo->SetText(FText::FromString(""));
-			WSlot4TotalAmmo->SetText(FText::FromString(""));
-			Slot4Ammo->SetText(FText::FromString(""));
-		}
-		else
-		{
-			if (ItemData.StaticData.ItemType == EItemType::Weapon)
-			{
-				WSlot4Ammo->SetText(FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(ItemData.WeaponData.Ammos), FText::AsNumber(ItemData.WeaponData.MagSize)));
-				WSlot4TotalAmmo->SetText(FText::Format(FText::FromString(TEXT("{0}")), FText::AsNumber(InventoryComponent->GetAmmoAmount(ItemData.WeaponData.AmmoType))));
-				Slot4Ammo->SetText(FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(ItemData.WeaponData.Ammos), FText::AsNumber(InventoryComponent->GetAmmoAmount(ItemData.WeaponData.AmmoType))));
-			}
-		}
-		break;
-	default:
-		break;
-	}
-}
-
-void UCPP_InventoryHUD::ChangeMSlot(int32 SlotNum, const FItemRuntimeInfo& ItemData)
-{
-	switch (SlotNum)
-	{
-	case 1:
 		MSlot1Text->SetText(FText::FromString(ItemData.StaticData.ItemName));
 		ISlot1Text->SetText(FText::FromString(ItemData.StaticData.ItemName));
-		ISlot1Quantity->SetText(ItemData.ItemQuantity == 1 ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
-		MSlot1Ammo->SetText(ItemData.StaticData.ItemType == EItemType::None ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
+		if (ItemData.StaticData.ItemName.Equals("Empty"))
+		{
+			ISlot1Quantity->SetText(FText::FromString(""));
+			WSlot1TotalAmmo->SetText(FText::FromString(""));
+			MSlot1Ammo->SetText(FText::FromString(""));
+		}
+		else
+		{
+			if (ItemData.StaticData.ItemType == EItemType::Weapon)
+			{
+				ISlot1Quantity->SetText(FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(ItemData.WeaponData.Ammos), FText::AsNumber(ItemData.WeaponData.MagSize)));
+				WSlot1TotalAmmo->SetText(FText::Format(FText::FromString(TEXT("{0}")), FText::AsNumber(InventoryComponent->GetAmmoAmount(ItemData.WeaponData.AmmoType))));
+				MSlot1Ammo->SetText(FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(ItemData.WeaponData.Ammos), FText::AsNumber(InventoryComponent->GetAmmoAmount(ItemData.WeaponData.AmmoType))));
+			}
+			else
+			{
+				ISlot1Quantity->SetText(ItemData.ItemQuantity == 1 ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
+				MSlot1Ammo->SetText(ItemData.StaticData.ItemType == EItemType::None ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
+				WSlot1TotalAmmo->SetText(FText::FromString(""));
+			}
+		}
 		break;
 	case 2:
 		MSlot2Text->SetText(FText::FromString(ItemData.StaticData.ItemName));
 		ISlot2Text->SetText(FText::FromString(ItemData.StaticData.ItemName));
-		ISlot2Quantity->SetText(ItemData.ItemQuantity == 1 ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
-		MSlot2Ammo->SetText(ItemData.StaticData.ItemType == EItemType::None ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
+		if (ItemData.StaticData.ItemName.Equals("Empty"))
+		{
+			ISlot2Quantity->SetText(FText::FromString(""));
+			WSlot2TotalAmmo->SetText(FText::FromString(""));
+			MSlot2Ammo->SetText(FText::FromString(""));
+		}
+		else
+		{
+			if (ItemData.StaticData.ItemType == EItemType::Weapon)
+			{
+				ISlot2Quantity->SetText(FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(ItemData.WeaponData.Ammos), FText::AsNumber(ItemData.WeaponData.MagSize)));
+				WSlot2TotalAmmo->SetText(FText::Format(FText::FromString(TEXT("{0}")), FText::AsNumber(InventoryComponent->GetAmmoAmount(ItemData.WeaponData.AmmoType))));
+				MSlot2Ammo->SetText(FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(ItemData.WeaponData.Ammos), FText::AsNumber(InventoryComponent->GetAmmoAmount(ItemData.WeaponData.AmmoType))));
+			}
+			else
+			{
+				ISlot2Quantity->SetText(ItemData.ItemQuantity == 1 ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
+				MSlot2Ammo->SetText(ItemData.StaticData.ItemType == EItemType::None ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
+				WSlot2TotalAmmo->SetText(FText::FromString(""));
+			}
+		}
 		break;
 	case 3:
 		MSlot3Text->SetText(FText::FromString(ItemData.StaticData.ItemName));
 		ISlot3Text->SetText(FText::FromString(ItemData.StaticData.ItemName));
-		ISlot3Quantity->SetText(ItemData.ItemQuantity == 1 ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
-		MSlot3Ammo->SetText(ItemData.StaticData.ItemType == EItemType::None ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
+		if (ItemData.StaticData.ItemName.Equals("Empty"))
+		{
+			ISlot3Quantity->SetText(FText::FromString(""));
+			WSlot3TotalAmmo->SetText(FText::FromString(""));
+			MSlot3Ammo->SetText(FText::FromString(""));
+		}
+		else
+		{
+			if (ItemData.StaticData.ItemType == EItemType::Weapon)
+			{
+				ISlot3Quantity->SetText(FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(ItemData.WeaponData.Ammos), FText::AsNumber(ItemData.WeaponData.MagSize)));
+				WSlot3TotalAmmo->SetText(FText::Format(FText::FromString(TEXT("{0}")), FText::AsNumber(InventoryComponent->GetAmmoAmount(ItemData.WeaponData.AmmoType))));
+				MSlot3Ammo->SetText(FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(ItemData.WeaponData.Ammos), FText::AsNumber(InventoryComponent->GetAmmoAmount(ItemData.WeaponData.AmmoType))));
+			}
+			else
+			{
+				ISlot3Quantity->SetText(ItemData.ItemQuantity == 1 ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
+				MSlot3Ammo->SetText(ItemData.StaticData.ItemType == EItemType::None ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
+				WSlot3TotalAmmo->SetText(FText::FromString(""));
+			}
+		}
 		break;
 	case 4:
 		MSlot4Text->SetText(FText::FromString(ItemData.StaticData.ItemName));
 		ISlot4Text->SetText(FText::FromString(ItemData.StaticData.ItemName));
-		ISlot4Quantity->SetText(ItemData.ItemQuantity == 1 ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
-		MSlot4Ammo->SetText(ItemData.StaticData.ItemType == EItemType::None ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
+		if (ItemData.StaticData.ItemName.Equals("Empty"))
+		{
+			ISlot4Quantity->SetText(FText::FromString(""));
+			WSlot4TotalAmmo->SetText(FText::FromString(""));
+			MSlot4Ammo->SetText(FText::FromString(""));
+		}
+		else
+		{
+			if (ItemData.StaticData.ItemType == EItemType::Weapon)
+			{
+				ISlot4Quantity->SetText(FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(ItemData.WeaponData.Ammos), FText::AsNumber(ItemData.WeaponData.MagSize)));
+				WSlot4TotalAmmo->SetText(FText::Format(FText::FromString(TEXT("{0}")), FText::AsNumber(InventoryComponent->GetAmmoAmount(ItemData.WeaponData.AmmoType))));
+				MSlot4Ammo->SetText(FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(ItemData.WeaponData.Ammos), FText::AsNumber(InventoryComponent->GetAmmoAmount(ItemData.WeaponData.AmmoType))));
+			}
+			else
+			{
+				ISlot4Quantity->SetText(ItemData.ItemQuantity == 1 ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
+				MSlot4Ammo->SetText(ItemData.StaticData.ItemType == EItemType::None ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
+				WSlot4TotalAmmo->SetText(FText::FromString(""));
+			}
+		}
 		break;
 	case 5:
 		MSlot5Text->SetText(FText::FromString(ItemData.StaticData.ItemName));
 		ISlot5Text->SetText(FText::FromString(ItemData.StaticData.ItemName));
-		ISlot5Quantity->SetText(ItemData.ItemQuantity == 1 ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
-		MSlot5Ammo->SetText(ItemData.StaticData.ItemType == EItemType::None ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
+		if (ItemData.StaticData.ItemName.Equals("Empty"))
+		{
+			ISlot5Quantity->SetText(FText::FromString(""));
+			WSlot5TotalAmmo->SetText(FText::FromString(""));
+			MSlot5Ammo->SetText(FText::FromString(""));
+		}
+		else
+		{
+			if (ItemData.StaticData.ItemType == EItemType::Weapon)
+			{
+				ISlot5Quantity->SetText(FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(ItemData.WeaponData.Ammos), FText::AsNumber(ItemData.WeaponData.MagSize)));
+				WSlot5TotalAmmo->SetText(FText::Format(FText::FromString(TEXT("{0}")), FText::AsNumber(InventoryComponent->GetAmmoAmount(ItemData.WeaponData.AmmoType))));
+				MSlot5Ammo->SetText(FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(ItemData.WeaponData.Ammos), FText::AsNumber(InventoryComponent->GetAmmoAmount(ItemData.WeaponData.AmmoType))));
+			}
+			else
+			{
+				ISlot5Quantity->SetText(ItemData.ItemQuantity == 1 ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
+				MSlot5Ammo->SetText(ItemData.StaticData.ItemType == EItemType::None ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
+				WSlot5TotalAmmo->SetText(FText::FromString(""));
+			}
+		}
 		break;
 	case 6:
 		MSlot6Text->SetText(FText::FromString(ItemData.StaticData.ItemName));
 		ISlot6Text->SetText(FText::FromString(ItemData.StaticData.ItemName));
-		ISlot6Quantity->SetText(ItemData.ItemQuantity == 1 ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
-		MSlot6Ammo->SetText(ItemData.StaticData.ItemType == EItemType::None ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
+		if (ItemData.StaticData.ItemName.Equals("Empty"))
+		{
+			ISlot6Quantity->SetText(FText::FromString(""));
+			WSlot6TotalAmmo->SetText(FText::FromString(""));
+			MSlot6Ammo->SetText(FText::FromString(""));
+		}
+		else
+		{
+			if (ItemData.StaticData.ItemType == EItemType::Weapon)
+			{
+				ISlot6Quantity->SetText(FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(ItemData.WeaponData.Ammos), FText::AsNumber(ItemData.WeaponData.MagSize)));
+				WSlot6TotalAmmo->SetText(FText::Format(FText::FromString(TEXT("{0}")), FText::AsNumber(InventoryComponent->GetAmmoAmount(ItemData.WeaponData.AmmoType))));
+				MSlot6Ammo->SetText(FText::Format(FText::FromString(TEXT("{0}/{1}")), FText::AsNumber(ItemData.WeaponData.Ammos), FText::AsNumber(InventoryComponent->GetAmmoAmount(ItemData.WeaponData.AmmoType))));
+			}
+			else
+			{
+				ISlot6Quantity->SetText(ItemData.ItemQuantity == 1 ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
+				MSlot6Ammo->SetText(ItemData.StaticData.ItemType == EItemType::None ? FText::FromString("") : FText::AsNumber(ItemData.ItemQuantity));
+				WSlot6TotalAmmo->SetText(FText::FromString(""));
+			}
+		}
 		break;
 	default:
 		break;
@@ -728,11 +579,6 @@ void UCPP_InventoryHUD::DelayOnSelected()
 	bIsSlotSelected = false;
 }
 
-void UCPP_InventoryHUD::MDelayOnSelected()
-{
-	bIsMSlotSelected = false;
-}
-
 void UCPP_InventoryHUD::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -748,7 +594,6 @@ void UCPP_InventoryHUD::NativeConstruct()
 
 	InventoryComponent->OnItemAdded.AddDynamic(this, &UCPP_InventoryHUD::OnAddedItem);
 	InventoryComponent->OnSlotChanged.AddDynamic(this, &UCPP_InventoryHUD::ChangeSlot);
-	InventoryComponent->OnMSlotChanged.AddDynamic(this, &UCPP_InventoryHUD::ChangeMSlot);
 	InventoryComponent->OnItemRemoved.AddDynamic(this, &UCPP_InventoryHUD::OnRemovedItem);
 	InventoryComponent->OnAmmoChanged.AddDynamic(this, &UCPP_InventoryHUD::ChangeAmmo);
 	InventoryComponent->OnItemEquipped.AddDynamic(this, &UCPP_InventoryHUD::EquipItem);
@@ -761,10 +606,6 @@ void UCPP_InventoryHUD::NativeConstruct()
 	}
 
 	EquipButton->OnClicked.AddDynamic(this, &UCPP_InventoryHUD::OnEquipButtonClicked);
-	Slot1WeaponEquip->OnClicked.AddDynamic(this, &UCPP_InventoryHUD::Slot1WeaponEquipFunc);
-	Slot2WeaponEquip->OnClicked.AddDynamic(this, &UCPP_InventoryHUD::Slot2WeaponEquipFunc);
-	Slot3WeaponEquip->OnClicked.AddDynamic(this, &UCPP_InventoryHUD::Slot3WeaponEquipFunc);
-	Slot4WeaponEquip->OnClicked.AddDynamic(this, &UCPP_InventoryHUD::Slot4WeaponEquipFunc);
 	Slot1MiscEquip->OnClicked.AddDynamic(this, &UCPP_InventoryHUD::Slot1MiscEquipFunc);
 	Slot2MiscEquip->OnClicked.AddDynamic(this, &UCPP_InventoryHUD::Slot2MiscEquipFunc);
 	Slot3MiscEquip->OnClicked.AddDynamic(this, &UCPP_InventoryHUD::Slot3MiscEquipFunc);
@@ -792,7 +633,6 @@ void UCPP_InventoryHUD::OnInventoryButtonClicked(bool DoWhat)
 	{
 		if (DoWhat)
 		{
-			WeaponSelector->SetVisibility(ESlateVisibility::Hidden);
 			MiscWheel->SetVisibility(ESlateVisibility::Hidden);
 			InventoryCanvas->SetVisibility(ESlateVisibility::Visible);
 		}
@@ -827,27 +667,13 @@ void UCPP_InventoryHUD::HandleInventorySlotClicked(UCPP_InventorySlot* ClickedSl
 
 	ContextMenuCanvasSlot->SetPosition(MousePos);
 
-	if (ClickedSlot->GetItemType() == EItemType::Weapon)
+	if (!InventoryComponent->IsItemEquipped(ClickedSlot->GetInstanceID()))
 	{
-		if (!InventoryComponent->IsWeaponEquipped(ClickedSlot->GetInstanceID()))
-		{
-			EquipText->SetText(FText::FromString("Equip"));
-		}
-		else
-		{
-			EquipText->SetText(FText::FromString("Unequip"));
-		}
+		EquipText->SetText(FText::FromString("Equip"));
 	}
-	else if (ClickedSlot->GetItemType() == EItemType::Meds || ClickedSlot->GetItemType() == EItemType::Armor || ClickedSlot->GetItemType() == EItemType::Utility)
+	else
 	{
-		if (!InventoryComponent->IsMiscEquipped(ClickedSlot->GetInstanceID()))
-		{
-			EquipText->SetText(FText::FromString("Equip"));
-		}
-		else
-		{
-			EquipText->SetText(FText::FromString("Unequip"));
-		}
+		EquipText->SetText(FText::FromString("Unequip"));
 	}
 	ContextMenu->SetVisibility(bIsContextMenuVisible ? ESlateVisibility::Hidden : ESlateVisibility::Visible);
 	if (bIsContextMenuVisible) 

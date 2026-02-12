@@ -39,15 +39,12 @@ public:
 	void ChangeInteractionText(const FString& NewText);
 
 	void WeaponWheelVisibilityHandler(bool bVisibility);
-	void MiscWheelVisibilityHandler(bool bVisibility);
 
 	void WeaponWheelLookEvent(float MouseX, float MouseY);
-	void MiscWheelLookEvent(float MouseX, float MouseY);
 
 	void UpdateMainProgressBarPercent(float Percent, FString Name);
 
 	int32 GetCurrentWeaponSlot();
-	int32 GetCurrentMiscSlot();
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")

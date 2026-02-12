@@ -94,32 +94,11 @@ void ACPP_PlayerController::WeaponWheelVisibilityHandler(bool bVisibility)
 	}
 }
 
-void ACPP_PlayerController::MiscWheelVisibilityHandler(bool bVisibility)
-{
-	if (InvHUD)
-	{
-		if (bVisibility)
-		{
-			FInputModeGameOnly GameOnlyMode;
-			SetInputMode(GameOnlyMode);
-		}
-		InvHUD->MVisibilityHandler(bVisibility);
-	}
-}
-
 void ACPP_PlayerController::WeaponWheelLookEvent(float MouseX, float MouseY)
 {
 	if (InvHUD)
 	{
 		InvHUD->LookEvent(MouseX, MouseY);
-	}
-}
-
-void ACPP_PlayerController::MiscWheelLookEvent(float MouseX, float MouseY)
-{
-	if (InvHUD)
-	{
-		InvHUD->MLookEvent(MouseX, MouseY);
 	}
 }
 
@@ -136,15 +115,6 @@ int32 ACPP_PlayerController::GetCurrentWeaponSlot()
 	if (InvHUD)
 	{
 		return InvHUD->GetCurrentSlot();
-	}
-	return -1;
-}
-
-int32 ACPP_PlayerController::GetCurrentMiscSlot()
-{
-	if (InvHUD)
-	{
-		return InvHUD->GetCurrentMSlot();
 	}
 	return -1;
 }

@@ -97,13 +97,6 @@ void ACPP_PlayerCharacter::LookFunc(const FInputActionValue& value)
 			PlayerController->WeaponWheelLookEvent(LookAxisVector.X, LookAxisVector.Y);
 		}
 	}
-	else if (bMiscWheel)
-	{
-		if (PlayerController)
-		{
-			PlayerController->MiscWheelLookEvent(LookAxisVector.X, LookAxisVector.Y);
-		}
-	}
 	else if (!bInvVisibility)
 	{
 		AddControllerPitchInput(LookAxisVector.Y);
@@ -183,7 +176,6 @@ void ACPP_PlayerCharacter::WeaponWheelStartFunc(const FInputActionValue& value)
 		if (PlayerController)
 		{
 			bWeaponWheel = true;
-			bMiscWheel = false;
 			bInvVisibility = false;
 			PlayerController->WeaponWheelVisibilityHandler(true);
 			int32 SizeX, SizeY;
@@ -201,7 +193,7 @@ void ACPP_PlayerCharacter::WeaponWheelEndFunc(const FInputActionValue& value)
 		PlayerController->WeaponWheelVisibilityHandler(false);
 		PlayerController->SetShowMouseCursor(bInvVisibility ? true : false);
 		int32 CurrentSlot = PlayerController->GetCurrentWeaponSlot();
-		InventoryComponent->EquipWeaponSlot(CurrentSlot - 1);
+		InventoryComponent->EquipSlot(CurrentSlot - 1);
 	}
 }
 
@@ -211,7 +203,6 @@ void ACPP_PlayerCharacter::InventoryFunc(const FInputActionValue& value)
 	PlayerController->SetShowMouseCursor(bInvVisibility ? false : true);
 	bInvVisibility = !bInvVisibility;
 	bWeaponWheel = false;
-	bMiscWheel = false;
 	int32 SizeX, SizeY;
 	PlayerController->GetViewportSize(SizeX, SizeY);
 	PlayerController->SetMouseLocation(SizeX / 2, SizeY / 2);
@@ -222,33 +213,6 @@ void ACPP_PlayerCharacter::OnPickupPressed(const FInputActionValue& value)
 	if (TargetItem)
 	{
 		TryPickUpItem();
-	}
-}
-
-void ACPP_PlayerCharacter::MiscWheelStartFunc(const FInputActionValue& value)
-{
-	if (PlayerController)
-	{
-		bMiscWheel = true;
-		bWeaponWheel = false;
-		bInvVisibility = false;
-		PlayerController->MiscWheelVisibilityHandler(true);
-		int32 SizeX, SizeY;
-		PlayerController->GetViewportSize(SizeX, SizeY);
-		PlayerController->SetMouseLocation(SizeX / 2, SizeY / 2);
-		PlayerController->SetShowMouseCursor(true);
-	}
-}
-
-void ACPP_PlayerCharacter::MiscWheelEndFunc(const FInputActionValue& value)
-{
-	if (PlayerController)
-	{
-		bMiscWheel = false;
-		PlayerController->MiscWheelVisibilityHandler(false);
-		PlayerController->SetShowMouseCursor(bInvVisibility ? true : false);
-		int32 CurrentSlot = PlayerController->GetCurrentMiscSlot();
-		InventoryComponent->EquipMiscSlot(CurrentSlot - 1);
 	}
 }
 
@@ -477,8 +441,6 @@ void ACPP_PlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(WeaponWheelInput, ETriggerEvent::Completed, this, &ACPP_PlayerCharacter::WeaponWheelEndFunc);
 		EnhancedInputComponent->BindAction(InventoryInput, ETriggerEvent::Triggered, this, &ACPP_PlayerCharacter::InventoryFunc);
 		EnhancedInputComponent->BindAction(PickupInput, ETriggerEvent::Started, this, &ACPP_PlayerCharacter::OnPickupPressed);
-		EnhancedInputComponent->BindAction(MiscWheelInput, ETriggerEvent::Started, this, &ACPP_PlayerCharacter::MiscWheelStartFunc);
-		EnhancedInputComponent->BindAction(MiscWheelInput, ETriggerEvent::Completed, this, &ACPP_PlayerCharacter::MiscWheelEndFunc);
 		EnhancedInputComponent->BindAction(M1Input, ETriggerEvent::Started, this, &ACPP_PlayerCharacter::M1Down);
 		EnhancedInputComponent->BindAction(M1Input, ETriggerEvent::Completed, this, &ACPP_PlayerCharacter::M1Up);
 		EnhancedInputComponent->BindAction(RInput, ETriggerEvent::Triggered, this, &ACPP_PlayerCharacter::RKeyDown);
