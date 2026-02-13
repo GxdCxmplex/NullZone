@@ -26,9 +26,13 @@ class NULLZONE_API IEquippable
 public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Equippable")
-	void StartUse(ACPP_PlayerCharacter* Character);
+	void StartUseM1(ACPP_PlayerCharacter* Character);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Equippable")
+	void StartUseM2(ACPP_PlayerCharacter* Character);
 
 	UFUNCTION(BlueprintNativeEvent)
-	void StopUse();
+	void StopUseM1();
+	UFUNCTION(BlueprintNativeEvent)
+	void StopUseM2();
 
 };

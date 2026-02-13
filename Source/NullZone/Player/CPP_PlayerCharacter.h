@@ -7,6 +7,7 @@
 #include "InputActionValue.h"
 #include "CPP_InventoryComponent.h"
 #include "NullZone/Interactable.h"
+#include "NullZone/CombatInterface.h"
 #include "CPP_PlayerCharacter.generated.h"
 
 class UInputMappingContext;
@@ -15,12 +16,48 @@ class UCameraComponent;
 class ACPP_PlayerController;
 
 UCLASS()
-class NULLZONE_API ACPP_PlayerCharacter : public ACharacter
+class NULLZONE_API ACPP_PlayerCharacter : public ACharacter, public ICombatInterface
 {
 	GENERATED_BODY()
 
 public:
 	ACPP_PlayerCharacter();
+
+	virtual void Tick(float DeltaTime) override;
+	virtual void TakeDamage_Implementation(float Damage, AActor* DamageCauser) override;
+
+	UFUNCTION()
+	void EnableRegen();
+	UFUNCTION()
+	void JumpCd();
+
+	FORCEINLINE float GetHealth() const { return Health; }
+	FORCEINLINE float GetHealthMax() const { return HealthMax; }
+	FORCEINLINE float GetStamina() const { return Stamina; }
+	FORCEINLINE float GetStaminaMax() const { return StaminaMax; }
+
+	void SetStamina(float Current, float Max);
+	UFUNCTION(BlueprintCallable)
+	void SetHealth(float Current, float Max);
+
+	void CanRegenStaminaFunc();
+
+	UFUNCTION(BlueprintCallable)
+	void TryPickUpItem();
+
+	void ClearTargetItem();
+
+	void MedApplied(FItemRuntimeInfo Data);
+	void UpdateProgressBar(float Percent, FString Name);
+
+	UFUNCTION(BlueprintCallable)
+
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	FORCEINLINE UCPP_InventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
+	FORCEINLINE bool CanAttack() const { return bCanAttack; }
+	void SetAttackBool(bool NewBool) { bCanAttack = NewBool; }
+	
 
 protected:
 
@@ -56,6 +93,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* M1Input;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* M2Input;
 
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* RInput;
@@ -120,6 +159,8 @@ protected:
 	void OnPickupPressed(const FInputActionValue& value);
 	void M1Down();
 	void M1Up();
+	void M2Down();
+	void M2Up();
 	void RKeyDown();
 	void GKeyDown();
 
@@ -131,37 +172,6 @@ protected:
 
 	UFUNCTION()
 	void OnHealthChanged(float Old, float Current, float Max);
-
-public:	
-	virtual void Tick(float DeltaTime) override;
-
-	UFUNCTION()
-	void EnableRegen();
-	UFUNCTION()
-	void JumpCd();
-
-	FORCEINLINE float GetHealth() const { return Health; }
-	FORCEINLINE float GetHealthMax() const { return HealthMax; }
-
-	void SetStamina(float Current, float Max);
-	UFUNCTION(BlueprintCallable)
-	void SetHealth(float Current, float Max);
-
-	void CanRegenStaminaFunc();
-	
-	UFUNCTION(BlueprintCallable)
-	void TryPickUpItem();
-
-	void ClearTargetItem();
-
-	void MedApplied(FItemRuntimeInfo Data);
-	void UpdateProgressBar(float Percent, FString Name);
-
-	UFUNCTION(BlueprintCallable)
-
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	FORCEINLINE UCPP_InventoryComponent* GetInventoryComponent() const {return InventoryComponent;}
 
 private:
 	UPROPERTY()
@@ -182,4 +192,7 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "UI")
 	bool bM1Down = false;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	bool bCanAttack = true;
 };

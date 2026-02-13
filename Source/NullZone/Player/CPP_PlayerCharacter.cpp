@@ -218,18 +218,36 @@ void ACPP_PlayerCharacter::OnPickupPressed(const FInputActionValue& value)
 
 void ACPP_PlayerCharacter::M1Down()
 {
+	if (bWeaponWheel || bInvVisibility) return;
 	ACPP_EquipActor* EquippedActor = InventoryComponent->GetEquippedActor();
-	if (!EquippedActor || bInvVisibility) return;
+	if (!EquippedActor) return;
 	bM1Down = true;
-	IEquippable::Execute_StartUse(Cast<UObject>(EquippedActor), this);
+	IEquippable::Execute_StartUseM1(Cast<UObject>(EquippedActor), this);
 }
 
 void ACPP_PlayerCharacter::M1Up()
 {
 	bM1Down = false;
+	if (bWeaponWheel || bInvVisibility) return;
 	ACPP_EquipActor* EquippedActor = InventoryComponent->GetEquippedActor();
-	if (!EquippedActor || bInvVisibility) return;
-	IEquippable::Execute_StopUse(Cast<UObject>(EquippedActor));
+	if (!EquippedActor) return;
+	IEquippable::Execute_StopUseM1(Cast<UObject>(EquippedActor));
+}
+
+void ACPP_PlayerCharacter::M2Down()
+{
+	if (bWeaponWheel || bInvVisibility) return;
+	ACPP_EquipActor* EquippedActor = InventoryComponent->GetEquippedActor();
+	if (!EquippedActor) return;
+	IEquippable::Execute_StartUseM2(Cast<UObject>(EquippedActor), this);
+}
+
+void ACPP_PlayerCharacter::M2Up()
+{
+	if (bWeaponWheel || bInvVisibility) return;
+	ACPP_EquipActor* EquippedActor = InventoryComponent->GetEquippedActor();
+	if (!EquippedActor) return;
+	IEquippable::Execute_StopUseM2(Cast<UObject>(EquippedActor));
 }
 
 void ACPP_PlayerCharacter::RKeyDown()
@@ -425,6 +443,11 @@ void ACPP_PlayerCharacter::Tick(float DeltaTime)
 	}
 }
 
+void ACPP_PlayerCharacter::TakeDamage_Implementation(float Damage, AActor* DamageCauser)
+{
+	SetHealth(FMath::Min(Health - Damage, 0), HealthMax);
+}
+
 void ACPP_PlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -443,6 +466,8 @@ void ACPP_PlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(PickupInput, ETriggerEvent::Started, this, &ACPP_PlayerCharacter::OnPickupPressed);
 		EnhancedInputComponent->BindAction(M1Input, ETriggerEvent::Started, this, &ACPP_PlayerCharacter::M1Down);
 		EnhancedInputComponent->BindAction(M1Input, ETriggerEvent::Completed, this, &ACPP_PlayerCharacter::M1Up);
+		EnhancedInputComponent->BindAction(M2Input, ETriggerEvent::Started, this, &ACPP_PlayerCharacter::M2Down);
+		EnhancedInputComponent->BindAction(M2Input, ETriggerEvent::Completed, this, &ACPP_PlayerCharacter::M2Up);
 		EnhancedInputComponent->BindAction(RInput, ETriggerEvent::Triggered, this, &ACPP_PlayerCharacter::RKeyDown);
 		EnhancedInputComponent->BindAction(GInput, ETriggerEvent::Triggered, this, &ACPP_PlayerCharacter::GKeyDown);
 	}

@@ -131,19 +131,49 @@ struct NULLZONE_API FMeeleeData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float SwingRate;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Melee")
+	int32 CurrentComboIndex;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Melee")
+	float ComboResetTime;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float Cooldown;
+	// Light
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Melee")
+	float LightDamage1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Melee")
+	float LightDamage2;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Melee")
+	float LightDamage3;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Melee")
+	float LightRange;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Melee")
+	float LightCooldown;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float BaseDamage;
+	// Heavy
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Melee")
+	float HeavyDamage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Melee")
+	float HeavyRange;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Melee")
+	float HeavyCooldown;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Melee")
+	float HeavyChargeTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Melee")
+	float TraceRadius;
 
 	FMeeleeData()
-		: SwingRate(1.0f)
-		, Cooldown(0.5f)
-		, BaseDamage(25.0f)
+		: CurrentComboIndex(0)
+		, ComboResetTime(1.0f)
+		, LightDamage1(15.f)
+		, LightDamage2(20.f)
+		, LightDamage3(25.f)
+		, LightRange(200.f)
+		, LightCooldown(0.3f)
+		, HeavyDamage(60.f)
+		, HeavyRange(250.f)
+		, HeavyCooldown(1.2f)
+		, HeavyChargeTime(0.6f)
+		, TraceRadius(80.f)
 	{
 	}
 };

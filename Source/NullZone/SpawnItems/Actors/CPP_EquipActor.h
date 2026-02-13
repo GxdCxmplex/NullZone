@@ -10,6 +10,12 @@
 
 class ACPP_PlayerCharacter;
 
+enum class EMeeleeAttackType : uint8
+{
+	Light,
+	Heavy
+};
+
 UCLASS()
 class NULLZONE_API ACPP_EquipActor : public AActor, public IEquippable
 {
@@ -20,12 +26,20 @@ public:
 	ACPP_EquipActor();
 
 	/* interfaces */
-	virtual void StartUse_Implementation(ACPP_PlayerCharacter* Character) override;
-	virtual void StopUse_Implementation() override;
+	virtual void StartUseM1_Implementation(ACPP_PlayerCharacter* Character) override;
+	virtual void StartUseM2_Implementation(ACPP_PlayerCharacter* Character) override;
+	virtual void StopUseM1_Implementation() override;
+	virtual void StopUseM2_Implementation() override;
 	float GetUseProgress() const;
 
 	void UseMeds();
 	void UseWeapon();
+	void UseMeeleeAttack(EMeeleeAttackType Type);
+	void PerformMeleeTrace(EMeeleeAttackType Type);
+	void UseLightMeeleeOnM1Hold();
+	void ExecuteHeavyAttack();
+	void ResetCombo();
+	void ResetAttackCooldown();
 
 	void ChangedItem();
 
@@ -52,8 +66,13 @@ protected:
 	FItemRuntimeInfo RuntimeData;
 
 	FTimerHandle UseTimer;
+	FTimerHandle M2UseTimer;
+	FTimerHandle ComboResetTimer;
+	FTimerHandle HeaveChargeTimer;
+	FTimerHandle AttackCooldownTimer;
 	
 	bool bIsUsing = false;
+	bool m2IsUsing = false;
 	float UseElapsed = .0f;
 
 	ACPP_PlayerCharacter* OwningCharacter = nullptr;
