@@ -87,6 +87,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "NPC")
 	FName WeaponId;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "NPC")
+	float MinCombatDistance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "NPC")
+	float IdealCombatDistance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "NPC")
+	float MaxCombatDistance;
+
 	FNpcStaticData()
 		: MaxHealth(100.0f)
 		, MaxStamina(100.0f)

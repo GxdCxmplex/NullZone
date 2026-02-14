@@ -8,6 +8,7 @@
 #include "CPP_InventoryComponent.h"
 #include "NullZone/Interactable.h"
 #include "NullZone/CombatInterface.h"
+#include "NullZone/UserInterface.h"
 #include "CPP_PlayerCharacter.generated.h"
 
 class UInputMappingContext;
@@ -16,7 +17,7 @@ class UCameraComponent;
 class ACPP_PlayerController;
 
 UCLASS()
-class NULLZONE_API ACPP_PlayerCharacter : public ACharacter, public ICombatInterface
+class NULLZONE_API ACPP_PlayerCharacter : public ACharacter, public ICombatInterface, public IUserInterface
 {
 	GENERATED_BODY()
 
@@ -54,8 +55,9 @@ public:
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	FORCEINLINE UCPP_InventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
-	FORCEINLINE bool CanAttack() const { return bCanAttack; }
+	UCPP_InventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
+	ACPP_PlayerController* GetPlayerController() const { return PlayerController; }
+	bool CanAttack() const { return bCanAttack; }
 	void SetAttackBool(bool NewBool) { bCanAttack = NewBool; }
 	
 

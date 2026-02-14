@@ -4,6 +4,7 @@
 #include "CPP_EquipActor.h"
 #include "TimerManager.h"
 #include "NullZone/Player/CPP_PlayerCharacter.h"
+#include "NullZone/Player/CPP_PlayerController.h"
 #include "NullZone/CombatInterface.h"
 
 // Sets default values
@@ -14,11 +15,16 @@ ACPP_EquipActor::ACPP_EquipActor()
 
 }
 
-void ACPP_EquipActor::StartUseM1_Implementation(ACPP_PlayerCharacter* Character)
+void ACPP_EquipActor::StartUseM1_Implementation(AActor* User, bool bIsPlayer)
 {
-	if (bIsUsing || !Character) return;
-
-	OwningCharacter = Character;
+	if (m2IsUsing || !User) return;
+	if (User->Implements<UUserInterface>())
+	{
+		OwningActor = User;
+		IsPlayer = bIsPlayer;
+		OwningCharacter = TScriptInterface<IUserInterface>(User);
+	}
+	if (!OwningCharacter) return;
 	bIsUsing = true;
 	if (RuntimeData.StaticData.ItemType == EItemType::Meds)
 	{
@@ -34,10 +40,16 @@ void ACPP_EquipActor::StartUseM1_Implementation(ACPP_PlayerCharacter* Character)
 	}
 }
 
-void ACPP_EquipActor::StartUseM2_Implementation(ACPP_PlayerCharacter* Character)
+void ACPP_EquipActor::StartUseM2_Implementation(AActor* User, bool bIsPlayer)
 {
-	if (m2IsUsing || !Character) return;
-	OwningCharacter = Character;
+	if (m2IsUsing || !User) return;
+	if (User->Implements<UUserInterface>())
+	{
+		OwningActor = User;
+		IsPlayer = bIsPlayer;
+		OwningCharacter = TScriptInterface<IUserInterface>(User);
+	}
+	if (!OwningCharacter) return;
 	m2IsUsing = true;
 	if (RuntimeData.StaticData.ItemType == EItemType::Meelee)
 	{
@@ -51,7 +63,7 @@ void ACPP_EquipActor::StopUseM1_Implementation()
 	bIsUsing = false;
 	GetWorld()->GetTimerManager().ClearTimer(UseTimer);
 	UseElapsed = 0.f;
-	OwningCharacter->UpdateProgressBar(GetUseProgress(), RuntimeData.StaticData.ItemName);
+	if (IsPlayer) OwningCharacter->UpdateProgressBar(GetUseProgress(), RuntimeData.StaticData.ItemName);
 	UE_LOG(LogTemp, Log, TEXT("Use cancelled"));
 }
 
@@ -72,7 +84,6 @@ void ACPP_EquipActor::FinishUse()
 		OwningCharacter->MedApplied(RuntimeData);
 		OwningCharacter->UpdateProgressBar(GetUseProgress(), RuntimeData.StaticData.ItemName);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Finish Use"));
 }
 
 float ACPP_EquipActor::GetUseProgress() const
@@ -87,7 +98,6 @@ void ACPP_EquipActor::UseMeds()
 	UseElapsed = .0f;
 	GetWorld()->GetTimerManager().SetTimer(UseTimer, this, &ACPP_EquipActor::TickUse, 0.05f, true);
 
-	UE_LOG(LogTemp, Warning, TEXT("Start Use"));
 }
 
 void ACPP_EquipActor::UseWeapon()
@@ -109,7 +119,7 @@ void ACPP_EquipActor::UseWeapon()
 	FVector Start;
 	FRotator Rot;
 
-	OwningCharacter->GetController()->GetPlayerViewPoint(Start, Rot);
+	if (IsPlayer) OwningCharacter->GetPlayerController()->GetPlayerViewPoint(Start, Rot);
 
 	FVector ShootDir = FMath::VRandCone(Rot.Vector(), FMath::DegreesToRadians(WeaponData.Spread));
 
@@ -117,7 +127,7 @@ void ACPP_EquipActor::UseWeapon()
 	FHitResult Hit;
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
-	Params.AddIgnoredActor(OwningCharacter);
+	Params.AddIgnoredActor(OwningActor);
 	Params.bReturnPhysicalMaterial = true;
 
 	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_GameTraceChannel1, Params);
@@ -125,7 +135,6 @@ void ACPP_EquipActor::UseWeapon()
 	DrawDebugLine(GetWorld(), Start, bHit ? Hit.ImpactPoint : End, Color, false, 1.f, 0, 1.5f);
 	if (bHit)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Shot"));
 		DrawDebugSphere(
 			GetWorld(),
 			Hit.ImpactPoint,
@@ -141,7 +150,8 @@ void ACPP_EquipActor::UseWeapon()
 void ACPP_EquipActor::UseMeeleeAttack(EMeeleeAttackType Type)
 {
 	float StaminaReduce = Type == EMeeleeAttackType::Light ? 5 : 15;
-	if (!OwningCharacter || !OwningCharacter->CanAttack() || OwningCharacter->GetStamina() < StaminaReduce) return;
+	if (!OwningCharacter || !OwningCharacter->CanAttack()) return;
+	if (IsPlayer && OwningCharacter->GetStamina() < StaminaReduce) return;
 	OwningCharacter->SetAttackBool(false);
 	if (Type == EMeeleeAttackType::Light)
 	{
@@ -158,14 +168,14 @@ void ACPP_EquipActor::UseMeeleeAttack(EMeeleeAttackType Type)
 		}
 		GetWorldTimerManager().SetTimer(ComboResetTimer, this, &ACPP_EquipActor::ResetCombo, RuntimeData.MeeleeData.ComboResetTime, false);
 		GetWorldTimerManager().SetTimer(AttackCooldownTimer, this, &ACPP_EquipActor::ResetAttackCooldown, RuntimeData.MeeleeData.LightCooldown, false);
-		OwningCharacter->SetStamina(OwningCharacter->GetStamina() - StaminaReduce, OwningCharacter->GetStaminaMax());
+		if (IsPlayer) OwningCharacter->SetStamina(OwningCharacter->GetStamina() - StaminaReduce, OwningCharacter->GetStaminaMax());
 	}
 	else
 	{
 		ResetCombo();
 		GetWorldTimerManager().SetTimer(HeaveChargeTimer, this, &ACPP_EquipActor::ExecuteHeavyAttack, RuntimeData.MeeleeData.HeavyChargeTime, false);
 		GetWorld()->GetTimerManager().ClearTimer(UseTimer);
-		OwningCharacter->SetStamina(OwningCharacter->GetStamina() - StaminaReduce, OwningCharacter->GetStaminaMax());
+		if (IsPlayer) OwningCharacter->SetStamina(OwningCharacter->GetStamina() - StaminaReduce, OwningCharacter->GetStaminaMax());
 	}
 }
 
@@ -173,9 +183,9 @@ void ACPP_EquipActor::PerformMeleeTrace(EMeeleeAttackType Type)
 {
 	if (!OwningCharacter) return;
 	//Start = OwningCharacter->GetMesh()->GetSocketLocation("hand_r_socket");
-	FVector Start = OwningCharacter->GetActorLocation();
+	FVector Start = OwningActor->GetActorLocation();
 	float Range = Type == EMeeleeAttackType::Light ? RuntimeData.MeeleeData.LightRange : RuntimeData.MeeleeData.HeavyRange;
-	FVector End = Start + (OwningCharacter->GetActorForwardVector() * Range);
+	FVector End = Start + (OwningActor->GetActorForwardVector() * Range);
 
 	FCollisionShape Sphere = FCollisionShape::MakeSphere(RuntimeData.MeeleeData.TraceRadius);
 
@@ -183,7 +193,7 @@ void ACPP_EquipActor::PerformMeleeTrace(EMeeleeAttackType Type)
 
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
-	Params.AddIgnoredActor(OwningCharacter);
+	Params.AddIgnoredActor(OwningActor);
 
 	bool bHit = GetWorld()->SweepMultiByChannel(HitResults, Start, End, FQuat::Identity, ECC_GameTraceChannel1, Sphere, Params);
 
@@ -199,7 +209,6 @@ void ACPP_EquipActor::PerformMeleeTrace(EMeeleeAttackType Type)
 		{
 			if (ICombatInterface* Target = Cast<ICombatInterface>(Hit.GetActor()))
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *Hit.GetActor()->GetName());
 				DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 5.f, 12, FColor::Red, false, 1.f);
 				float Damage;
 				if (Type == EMeeleeAttackType::Light)
@@ -227,7 +236,7 @@ void ACPP_EquipActor::PerformMeleeTrace(EMeeleeAttackType Type)
 				if (!HitActors.Contains(Hit.GetActor()))
 				{
 					HitActors.Add(Hit.GetActor());
-					ICombatInterface::Execute_TakeDamage(Cast<UObject>(Hit.GetActor()), Damage, OwningCharacter);
+					ICombatInterface::Execute_TakeDamage(Cast<UObject>(Hit.GetActor()), Damage, OwningActor);
 				}
 			}
 		}
@@ -264,18 +273,32 @@ void ACPP_EquipActor::ChangedItem()
 	OwningCharacter = nullptr;
 }
 
-void ACPP_EquipActor::Reloading(ACPP_PlayerCharacter* Character)
+void ACPP_EquipActor::Reloading(AActor* User, bool bIsPlayer)
 {
-	if (!OwningCharacter) OwningCharacter = Character;
+	if (!User) return;
+	if (User->Implements<UUserInterface>())
+	{
+		OwningActor = User;
+		IsPlayer = bIsPlayer;
+		OwningCharacter = TScriptInterface<IUserInterface>(User);
+	}
+	if (!OwningCharacter) return;
 	if (OwningCharacter->GetInventoryComponent()->ReloadWeapon())
 	{
 		//reload animation
 	}
 }
 
-void ACPP_EquipActor::Unloading(ACPP_PlayerCharacter* Character)
+void ACPP_EquipActor::Unloading(AActor* User, bool bIsPlayer)
 {
-	if (!OwningCharacter) OwningCharacter = Character;
+	if (!User) return;
+	if (User->Implements<UUserInterface>())
+	{
+		OwningActor = User;
+		IsPlayer = bIsPlayer;
+		OwningCharacter = TScriptInterface<IUserInterface>(User);
+	}
+	if (!OwningCharacter) return;
 	if (OwningCharacter->GetInventoryComponent()->UnloadWeapon())
 	{
 		//unload animation

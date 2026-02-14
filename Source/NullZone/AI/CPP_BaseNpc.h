@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "NullZone/CombatInterface.h"
 #include "SetMovementSpeed.h"
+#include "NullZone/UserInterface.h"
 #include "NullZone/Data/NpcInfo.h"
 #include "CPP_BaseNpc.generated.h"
 
@@ -15,7 +16,7 @@ class UDataTable;
 class ACPP_EquipActor;
 
 UCLASS()
-class NULLZONE_API ACPP_BaseNpc : public ACharacter, public ICombatInterface, public ISetMovementSpeed
+class NULLZONE_API ACPP_BaseNpc : public ACharacter, public ICombatInterface, public ISetMovementSpeed, public IUserInterface
 {
 	GENERATED_BODY()
 
@@ -25,7 +26,29 @@ public:
 	virtual void TakeDamage_Implementation(float Damage, AActor* DamageCauser) override;
 	virtual void SetMovementSpeed_Implementation(EMovementSpeed NewSpeed) override;
 
-	void AttackFunc();
+
+	float GetStamina() const { return 0.f; }
+	float GetStaminaMax() const { return 0.f; }
+	void SetStamina(float NewValue, float MaxValue) {}
+
+	float GetHealth() const { return StaticData.MaxHealth; }
+	float GetHealthMax() const { return RuntimeData.Health; }
+	void SetHealth(float NewValue, float MaxValue);
+
+	bool CanAttack() const;
+	void SetAttackBool(bool bValue);
+
+	void UpdateProgressBar(float Progress, FString ItemName) {}
+
+	void MedApplied(FItemRuntimeInfo Data) {}
+
+	class UCPP_InventoryComponent* GetInventoryComponent() const { return nullptr; }
+	class ACPP_PlayerController* GetPlayerController() const { return nullptr; }
+
+	UFUNCTION()
+	void SetAttackToTrue();
+
+	bool AttackFunc();
 
 	void LoadNpcData();
 
@@ -53,6 +76,8 @@ protected:
 	UDataTable* NPCDataTable;
 
 	FName Name = "Test";
+
+	FTimerHandle AttackTimer;
 
 	class ACPP_BaseNPCController* AI = nullptr;
 

@@ -222,7 +222,7 @@ void ACPP_PlayerCharacter::M1Down()
 	ACPP_EquipActor* EquippedActor = InventoryComponent->GetEquippedActor();
 	if (!EquippedActor) return;
 	bM1Down = true;
-	IEquippable::Execute_StartUseM1(Cast<UObject>(EquippedActor), this);
+	IEquippable::Execute_StartUseM1(Cast<UObject>(EquippedActor), this, true);
 }
 
 void ACPP_PlayerCharacter::M1Up()
@@ -239,7 +239,7 @@ void ACPP_PlayerCharacter::M2Down()
 	if (bWeaponWheel || bInvVisibility) return;
 	ACPP_EquipActor* EquippedActor = InventoryComponent->GetEquippedActor();
 	if (!EquippedActor) return;
-	IEquippable::Execute_StartUseM2(Cast<UObject>(EquippedActor), this);
+	IEquippable::Execute_StartUseM2(Cast<UObject>(EquippedActor), this, true);
 }
 
 void ACPP_PlayerCharacter::M2Up()
@@ -254,14 +254,14 @@ void ACPP_PlayerCharacter::RKeyDown()
 {
 	ACPP_EquipActor* EquippedActor = InventoryComponent->GetEquippedActor();
 	if (!EquippedActor || bInvVisibility) return;
-	EquippedActor->Reloading(this);
+	EquippedActor->Reloading(this, true);
 }
 
 void ACPP_PlayerCharacter::GKeyDown()
 {
 	ACPP_EquipActor* EquippedActor = InventoryComponent->GetEquippedActor();
 	if (!EquippedActor || bInvVisibility) return;
-	EquippedActor->Unloading(this);
+	EquippedActor->Unloading(this, true);
 }
 
 void ACPP_PlayerCharacter::MedApplied(FItemRuntimeInfo Data)
@@ -445,7 +445,7 @@ void ACPP_PlayerCharacter::Tick(float DeltaTime)
 
 void ACPP_PlayerCharacter::TakeDamage_Implementation(float Damage, AActor* DamageCauser)
 {
-	SetHealth(FMath::Min(Health - Damage, 0), HealthMax);
+	SetHealth(FMath::Max(Health - Damage, 0), HealthMax);
 }
 
 void ACPP_PlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

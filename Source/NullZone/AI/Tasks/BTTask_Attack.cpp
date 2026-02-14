@@ -16,6 +16,5 @@ EBTNodeResult::Type UBTTask_Attack::ExecuteTask(UBehaviorTreeComponent& OwnerCom
 	if (!AI) return EBTNodeResult::Failed;
 	ACPP_BaseNpc* NPC = Cast<ACPP_BaseNpc>(AI->GetPawn());
 	if (!NPC) return EBTNodeResult::Failed;
-	NPC->AttackFunc();
-	return EBTNodeResult::Succeeded;
+	return NPC->AttackFunc() ?  EBTNodeResult::Succeeded : EBTNodeResult::Failed;
 }

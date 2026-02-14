@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "NullZone/Data/ItemInfo.h"
 #include "NullZone/Equippable.h"
+#include "NullZone/UserInterface.h"
 #include "CPP_EquipActor.generated.h"
 
 class ACPP_PlayerCharacter;
@@ -26,8 +27,8 @@ public:
 	ACPP_EquipActor();
 
 	/* interfaces */
-	virtual void StartUseM1_Implementation(ACPP_PlayerCharacter* Character) override;
-	virtual void StartUseM2_Implementation(ACPP_PlayerCharacter* Character) override;
+	virtual void StartUseM1_Implementation(AActor* User, bool bIsPlayer) override;
+	virtual void StartUseM2_Implementation(AActor* User, bool bIsPlayer) override;
 	virtual void StopUseM1_Implementation() override;
 	virtual void StopUseM2_Implementation() override;
 	float GetUseProgress() const;
@@ -43,8 +44,8 @@ public:
 
 	void ChangedItem();
 
-	void Reloading(ACPP_PlayerCharacter* Character);
-	void Unloading(ACPP_PlayerCharacter* Character);
+	void Reloading(AActor* User, bool bIsPlayer);
+	void Unloading(AActor* User, bool bIsPlayer);
 
 	void Initialize(const FItemData& InItemData);
 	void SetRuntimeData(const FItemRuntimeInfo& RuntimeData);
@@ -75,7 +76,9 @@ protected:
 	bool m2IsUsing = false;
 	float UseElapsed = .0f;
 
-	ACPP_PlayerCharacter* OwningCharacter = nullptr;
+	TScriptInterface<IUserInterface> OwningCharacter;
+	AActor* OwningActor = nullptr;
+	bool IsPlayer = false;
 
 	void TickUse();
 

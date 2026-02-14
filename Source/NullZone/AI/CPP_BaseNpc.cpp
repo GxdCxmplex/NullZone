@@ -6,9 +6,13 @@
 
 #include "CPP_BaseNPCController.h"
 #include "NullZone/SpawnItems/CPP_ItemManager.h"
+#include "NullZone/SpawnItems/Actors/CPP_EquipActor.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "TimerManager.h"
+
+#include "NullZone/Equippable.h"
 
 #include "BehaviorTree/BlackboardComponent.h"
 
@@ -39,13 +43,13 @@ void ACPP_BaseNpc::SetMovementSpeed_Implementation(EMovementSpeed NewSpeed)
 		NewMaxSpeed = 0.f;
 		break;
 	case EMovementSpeed::Walking:
-		NewMaxSpeed = 200.f;
+		NewMaxSpeed = 100.f;
 		break;
 	case EMovementSpeed::Sprinting:
-		NewMaxSpeed = 650.f;
+		NewMaxSpeed = 500.f;
 		break;
 	case EMovementSpeed::Jogging:
-		NewMaxSpeed = 400.f;
+		NewMaxSpeed = 350.f;
 		break;
 	default:
 		break;
@@ -77,14 +81,54 @@ void ACPP_BaseNpc::BeginPlay()
 	EquippedItem = ItemManager->EquipItemToNpc(StaticData.WeaponId, this);
 }
 
-void ACPP_BaseNpc::AttackFunc()
+void ACPP_BaseNpc::SetAttackToTrue()
 {
+	if (!BB) return;
+	BB->SetValueAsBool("CanAttack", true);
+}
+
+bool ACPP_BaseNpc::AttackFunc()
+{
+	if (!CanAttack() || !EquippedItem) return false;
 	AActor* CurrentTarget = Cast<AActor>(BB->GetValueAsObject("TargetActor"));
-	if (!CurrentTarget) return;
-	if (CurrentTarget->Implements<UCombatInterface>())
+	if (!CurrentTarget) return false;
+	//BB->SetValueAsBool("CanAttack", false);
+	if (StaticData.NpcType == ENpcType::Meelee)
 	{
-		ICombatInterface::Execute_TakeDamage(CurrentTarget, StaticData.AttackDamage, this);
+		if (FMath::FRand() >= .7f)
+		{
+			GetWorldTimerManager().SetTimer(AttackTimer, this, &ACPP_BaseNpc::SetAttackToTrue, EquippedItem->GetRuntimeInfo().MeeleeData.LightCooldown, false);
+			IEquippable::Execute_StartUseM1(Cast<UObject>(EquippedItem), this, false);
+		}
+		else
+		{
+			GetWorldTimerManager().SetTimer(AttackTimer, this, &ACPP_BaseNpc::SetAttackToTrue, EquippedItem->GetRuntimeInfo().MeeleeData.HeavyCooldown, false);
+			IEquippable::Execute_StartUseM2(Cast<UObject>(EquippedItem), this, false);
+		}
 	}
+	else
+	{
+		GetWorldTimerManager().SetTimer(AttackTimer, this, &ACPP_BaseNpc::SetAttackToTrue, EquippedItem->GetRuntimeInfo().WeaponData.FireRate, false);
+		IEquippable::Execute_StartUseM1(Cast<UObject>(EquippedItem), this, false);
+	}
+	return true;
+}
+
+bool ACPP_BaseNpc::CanAttack() const
+{
+	if (!BB) return false;
+	return BB->GetValueAsBool("CanAttack");
+}
+
+void ACPP_BaseNpc::SetAttackBool(bool NewBool)
+{
+	if (!BB) return;
+	BB->SetValueAsBool("CanAttack", NewBool);
+}
+
+void ACPP_BaseNpc::SetHealth(float NewValue, float MaxValue)
+{
+	RuntimeData.Health = NewValue;
 }
 
 void ACPP_BaseNpc::LoadNpcData()
@@ -99,12 +143,18 @@ void ACPP_BaseNpc::LoadNpcData()
 
 	RuntimeData.Health = StaticData.MaxHealth;
 	RuntimeData.Stamina = StaticData.MaxStamina;
+	RuntimeData.MinCombatDistance = StaticData.MinCombatDistance;
+	RuntimeData.IdealCombatDistance = StaticData.IdealCombatDistance;
+	RuntimeData.MaxCombatDistance = StaticData.MaxCombatDistance;
 	RuntimeData.StaticData = StaticData;
+
 
 	GetCharacterMovement()->MaxWalkSpeed = StaticData.MovementSpeed;
 
 	BB->SetValueAsFloat("WanderRadius", StaticData.WanderRadius);
-	
+	BB->SetValueAsFloat("MinCombatDistance", RuntimeData.MinCombatDistance);
+	BB->SetValueAsFloat("IdealCombatDistance", RuntimeData.IdealCombatDistance);
+	BB->SetValueAsFloat("MaxCombatDistance", RuntimeData.MaxCombatDistance);
 	AI->InitializePerceptionFromNPC(StaticData);
 
 	UE_LOG(LogTemp, Warning, TEXT("Data Assigned"));
