@@ -28,6 +28,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	ACPP_EquipActor* EquipItemToPlayer(const FItemRuntimeInfo& ItemData, const ACharacter* Player);
+	UFUNCTION()
+	void UnequipItemFromPlayer();
 
 	UFUNCTION(BlueprintCallable)
 	ACPP_EquipActor* EquipItemToNpc(const FName& ItemId, const ACharacter* Npc);

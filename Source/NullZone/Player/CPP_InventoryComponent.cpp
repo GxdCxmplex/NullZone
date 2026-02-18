@@ -313,6 +313,7 @@ void UCPP_InventoryComponent::EquipSlot(int32 Slot)
 	if (EquippedItem)
 	{
 		EquippedItem->ChangedItem();
+		ItemManager->UnequipItemFromPlayer();
 	}
 	CurrentSlot = Slot;
 	if (Slot < 0)

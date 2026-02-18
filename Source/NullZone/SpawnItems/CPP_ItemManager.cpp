@@ -44,15 +44,20 @@ ACPP_PickupActor* ACPP_ItemManager::SpawnItemInWorld(const ACPP_PickupActor* New
 ACPP_EquipActor* ACPP_ItemManager::EquipItemToPlayer(const FItemRuntimeInfo& ItemData, const ACharacter* Player)
 {
 	if (!PoolManager || !Player) return nullptr;
-
 	ACPP_EquipActor* Actor = PoolManager->GetEquipActor(ItemData);
 	if (!Actor)
 	{
 		UE_LOG(LogTemp, Error, TEXT("EQUIP ACTOR NOT FOUND"));
 		return nullptr;
 	}
-	//Actor->AttachToComponent(Player->GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, "");
+	Actor->AttachToComponent(Player->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "weaponsocket_r");
 	return Actor;
+}
+
+void ACPP_ItemManager::UnequipItemFromPlayer()
+{
+	if (!PoolManager) return;
+	PoolManager->ReturnEquipActor();
 }
 
 ACPP_EquipActor* ACPP_ItemManager::EquipItemToNpc(const FName& ItemId, const ACharacter* Npc)
@@ -64,6 +69,7 @@ ACPP_EquipActor* ACPP_ItemManager::EquipItemToNpc(const FName& ItemId, const ACh
 		UE_LOG(LogTemp, Error, TEXT("EQUIP ACTOR NOT FOUND"));
 		return nullptr;
 	}
+	Actor->AttachToComponent(Npc->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("weaponsocket_r"));//-7.396887
 	return Actor;
 }
 

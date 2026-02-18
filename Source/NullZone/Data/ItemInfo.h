@@ -132,8 +132,6 @@ struct NULLZONE_API FMeeleeData
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Melee")
-	int32 CurrentComboIndex;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Melee")
 	float ComboResetTime;
 
 	// Light
@@ -162,8 +160,7 @@ struct NULLZONE_API FMeeleeData
 	float TraceRadius;
 
 	FMeeleeData()
-		: CurrentComboIndex(0)
-		, ComboResetTime(1.0f)
+		: ComboResetTime(1.0f)
 		, LightDamage1(15.f)
 		, LightDamage2(20.f)
 		, LightDamage3(25.f)

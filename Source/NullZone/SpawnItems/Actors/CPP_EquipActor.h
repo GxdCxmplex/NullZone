@@ -35,12 +35,11 @@ public:
 
 	void UseMeds();
 	void UseWeapon();
-	void UseMeeleeAttack(EMeeleeAttackType Type);
-	void PerformMeleeTrace(EMeeleeAttackType Type);
-	void UseLightMeeleeOnM1Hold();
-	void ExecuteHeavyAttack();
-	void ResetCombo();
-	void ResetAttackCooldown();
+	void BeginMeleeHit(float InDamage, AActor* InUser);
+	void EndMeleeHit();
+
+	UFUNCTION()
+	void OnHitOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	void ChangedItem();
 
@@ -66,11 +65,14 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	FItemRuntimeInfo RuntimeData;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* ItemMesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	class UCapsuleComponent* HitCollider;
+
 	FTimerHandle UseTimer;
 	FTimerHandle M2UseTimer;
-	FTimerHandle ComboResetTimer;
-	FTimerHandle HeaveChargeTimer;
-	FTimerHandle AttackCooldownTimer;
 	
 	bool bIsUsing = false;
 	bool m2IsUsing = false;
@@ -82,5 +84,9 @@ protected:
 
 	void TickUse();
 
+	TSet<AActor*> HitActors;
+
 	FTransform OgTransform;
+
+	float Damage = 0;
 };

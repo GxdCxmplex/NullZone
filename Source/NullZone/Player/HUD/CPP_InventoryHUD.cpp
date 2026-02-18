@@ -195,14 +195,7 @@ void UCPP_InventoryHUD::OnEquipButtonClicked()
 	if (!CurrentClickedSlot) { UE_LOG(LogTemp, Warning, TEXT("no clicked slot exist")); return; }
 	if (EquipText->GetText().ToString().Equals("Equip"))
 	{
-		if (CurrentClickedSlot->GetItemType() == EItemType::Weapon)
-		{
-			ContextBarSwitcher->SetActiveWidgetIndex(1);
-		}
-		else
-		{
-			ContextBarSwitcher->SetActiveWidgetIndex(2);
-		}
+		ContextBarSwitcher->SetActiveWidgetIndex(1);
 	}
 	else
 	{

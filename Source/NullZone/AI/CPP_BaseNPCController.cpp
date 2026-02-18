@@ -126,7 +126,7 @@ void ACPP_BaseNPCController::InitializePerceptionFromNPC(const FNpcStaticData& S
 void ACPP_BaseNPCController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Perception update: %s, Success: %d"), *Actor->GetName(), Stimulus.WasSuccessfullySensed());
-	if (!Actor || !Actor->ActorHasTag("Player")) return;
+	if (!Actor || !Actor->ActorHasTag("Player") || Actor == GetPawn()) return;
 
 	if (Stimulus.WasSuccessfullySensed())
 	{

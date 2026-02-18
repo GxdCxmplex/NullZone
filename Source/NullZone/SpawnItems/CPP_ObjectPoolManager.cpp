@@ -95,7 +95,6 @@ ACPP_EquipActor* UCPP_ObjectPoolManager::GetEquipActor(const FItemRuntimeInfo& I
 ACPP_EquipActor* UCPP_ObjectPoolManager::GetEquipActorForNpc(const FName& ItemId)
 {
 	if (!AllEquipActors.Contains(ItemId)) return nullptr;
-
 	for (ACPP_EquipActor* Actor : AllEquipActors[ItemId])
 	{
 		if (Actor->IsHidden() && !Actor->IsActorBeingDestroyed() && Actor != CurrentEquipActor)
@@ -105,7 +104,6 @@ ACPP_EquipActor* UCPP_ObjectPoolManager::GetEquipActorForNpc(const FName& ItemId
 			Actor->SetActorTickEnabled(true);
 			Actor->ResetRuntimeData();
 			Actor->ResetToPoolState();
-			CurrentEquipActor = Actor;
 			AllEquipActors[ItemId].RemoveAtSwap(0);
 			return Actor;
 		}
@@ -117,7 +115,6 @@ ACPP_EquipActor* UCPP_ObjectPoolManager::GetEquipActorForNpc(const FName& ItemId
 	ACPP_EquipActor* NewActor = GetWorld()->SpawnActor<ACPP_EquipActor>(ACPP_EquipActor::StaticClass(), FVector(0, 0, 0), FRotator::ZeroRotator, SpawnParams);
 	NewActor->Initialize(*ItemData);
 	//AllEquipActors.FindOrAdd(ItemId).Add(NewActor);
-	CurrentEquipActor = NewActor;
 	return NewActor;
 }
 
@@ -238,7 +235,7 @@ void UCPP_ObjectPoolManager::ReturnPickupActor(const FItemRuntimeInfo& ItemData,
 void UCPP_ObjectPoolManager::ReturnEquipActor()
 {
 	if (!CurrentEquipActor) return;
-
+	CurrentEquipActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 	CurrentEquipActor->SetActorHiddenInGame(true);
 	CurrentEquipActor->SetActorEnableCollision(false);
 	CurrentEquipActor->SetActorTickEnabled(false);

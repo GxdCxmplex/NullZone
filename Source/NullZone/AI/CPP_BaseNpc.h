@@ -36,6 +36,7 @@ public:
 	void SetHealth(float NewValue, float MaxValue);
 
 	bool CanAttack() const;
+	void SetIsAttacking(bool bValue);
 	void SetAttackBool(bool bValue);
 
 	void UpdateProgressBar(float Progress, FString ItemName) {}
@@ -48,7 +49,21 @@ public:
 	UFUNCTION()
 	void SetAttackToTrue();
 
+	UFUNCTION()
+	void ResetAttackCooldown();
+	UFUNCTION()
+	void ResetCombo();
+
 	bool AttackFunc();
+	void StartLightAttack();
+
+	UFUNCTION()
+	void LightAttackBegin();
+	UFUNCTION()
+	void OnAttackEnd();
+
+	UFUNCTION()
+	void attachWeapon();
 
 	void LoadNpcData();
 
@@ -72,12 +87,17 @@ protected:
 	UPROPERTY()
 	FNPCRuntimeData RuntimeData;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Combat")
+	UAnimMontage* LightComboMonatge;
+
 	UPROPERTY(EditDefaultsOnly, Category = "NPC")
 	UDataTable* NPCDataTable;
 
 	FName Name = "Test";
 
 	FTimerHandle AttackTimer;
+	FTimerHandle ComboResetTimer;
+	FTimerHandle SpawnTimer;
 
 	class ACPP_BaseNPCController* AI = nullptr;
 
@@ -88,4 +108,7 @@ protected:
 
 	UPROPERTY()
 	class ACPP_ItemManager* ItemManager;
+
+	int32 ComboIndex = 0;
+	int32 MaxComboCount = 3;
 };
